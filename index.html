@@ -1,0 +1,1058 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111213"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="NYC Trip"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>New Year's NYC Trip</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: black station-sign band (trip + budget pill + day strip) → day map → timeline; bottom tab bar. Helvetica and subway bullets borrow the MTA's own sign system. */
+:root{
+  --bg:#F1F2F0; --surface:#FFFFFF; --ink:#141617; --muted:#5C6266; --line:#D8DBD9; --soft:#E8EAE8;
+  --band:#111213; --band-ink:#F6F6F4; --band-muted:#A9AEB1;
+  --accent:#0039A6; --accent-ink:#FFFFFF; --good:#0D7A3D; --bad:#C2261C; --warn:#A86200;
+  --water:#C7D5DE; --land:#F8F8F5; --land2:#EFEFEB; --park:#D2E5CB; --street:#E2E3DF; --ave:#C9CCC7; --label:#6A7074; --coast:#AFC2CE;
+  --c-food:#D9822B; --c-transit:#0039A6; --c-tickets:#B933AD; --c-hotel:#4A6B5D; --c-shop:#C2261C; --c-other:#8A8F93;
+  --f-ui:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif; --f-num:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D0F10; --surface:#17191B; --ink:#ECEDEB; --muted:#9AA1A5; --line:#2A2E31; --soft:#202325;
+  --band:#000000; --band-ink:#F2F2F0; --band-muted:#8E9497;
+  --accent:#7AA2FF; --accent-ink:#0B1530; --good:#4BC47F; --bad:#FF6B5E; --warn:#F0B44C;
+  --water:#0F1B24; --land:#1B1E20; --land2:#202427; --park:#1D2E22; --street:#262A2D; --ave:#353A3E; --label:#8C9498; --coast:#21323E;
+  --c-food:#F0A35A; --c-transit:#7AA2FF; --c-tickets:#D57BE0; --c-hotel:#7FB09A; --c-shop:#FF6B5E; --c-other:#A3A9AD; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D0F10; --surface:#17191B; --ink:#ECEDEB; --muted:#9AA1A5; --line:#2A2E31; --soft:#202325;
+  --band:#000000; --band-ink:#F2F2F0; --band-muted:#8E9497;
+  --accent:#7AA2FF; --accent-ink:#0B1530; --good:#4BC47F; --bad:#FF6B5E; --warn:#F0B44C;
+  --water:#0F1B24; --land:#1B1E20; --land2:#202427; --park:#1D2E22; --street:#262A2D; --ave:#353A3E; --label:#8C9498; --coast:#21323E;
+  --c-food:#F0A35A; --c-transit:#7AA2FF; --c-tickets:#D57BE0; --c-hotel:#7FB09A; --c-shop:#FF6B5E; --c-other:#A3A9AD; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-ui);font-size:15px;line-height:1.4;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--band)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* sign band */
+.band{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--band);color:var(--band-ink)}
+.band{padding-top:6px}
+.band::before{content:"";display:block;height:3px;background:var(--band-ink);opacity:.9}
+.band .wrap{padding-block:8px 8px;display:grid;gap:8px}
+.brow{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{display:flex;flex-direction:column;min-width:0}
+.brand b{font-weight:700;font-size:18px;letter-spacing:-.01em;line-height:1.1}
+.brand span{font-size:12px;color:var(--band-muted)}
+.pill{border:0;border-radius:999px;padding:6px 11px;font-weight:700;font-size:13px;white-space:nowrap;background:var(--good);color:#fff;display:inline-flex;gap:6px;align-items:center}
+.pill.over{background:var(--bad)}
+.pill small{font-weight:400;opacity:.9}
+.days{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;margin-inline:-4px;padding:0 4px 2px}
+.days::-webkit-scrollbar{display:none}
+.dchip{flex:0 0 auto;border:1.5px solid #3A3E41;background:transparent;color:var(--band-ink);border-radius:8px;padding:3px 6px 2px;display:grid;justify-items:center;gap:0;min-width:44px}
+.dchip span{font-size:10px;color:var(--band-muted);text-transform:uppercase;letter-spacing:.06em}
+.dchip b{font-size:15px;font-weight:700;line-height:1}
+.dchip i{font-style:normal;font-size:9.5px;height:11px;color:var(--band-muted)}
+.dchip[aria-pressed="true"]{background:var(--band-ink);color:var(--band);border-color:var(--band-ink)}
+.dchip[aria-pressed="true"] span,.dchip[aria-pressed="true"] i{color:var(--band)}
+.dchip.done i{color:var(--good)}
+
+main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.view{display:grid;gap:16px;padding-block:16px}
+.dayhead{display:grid;gap:2px}
+.dayhead .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dayhead h1{margin:0;font-size:22px;line-height:1.2;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+.daysum{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.daysum b{color:var(--ink);font-weight:700}
+
+.plan{display:grid;gap:16px}
+@media (min-width:900px){.plan{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}.mapcard{position:sticky;top:calc(env(safe-area-inset-top,0px) + 116px)}}
+
+/* map */
+.mapcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:grid}
+.maptools{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:5px 10px;font-size:13px;font-weight:700}
+.seg button+button{border-left:1.5px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.mapkey{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11.5px;color:var(--muted)}
+.mapkey i{display:inline-block;width:16px;height:0;border-top:3px solid var(--accent);vertical-align:middle;margin-right:4px}
+.mapkey i.sub{border-top:3px dashed #FF6319}.mapkey i.lm{width:8px;height:8px;border:0;background:var(--c-tickets);transform:rotate(45deg);margin-right:6px}.mapkey i.car{border-top:3px dashed var(--muted)}.mapkey i.htl{border-top:3px dotted var(--ink)}
+.mapbox{position:relative;height:min(52vh,460px);background:var(--water);touch-action:none;user-select:none;-webkit-user-select:none}
+.mapbox svg{display:block;width:100%;height:100%}
+.mapbtns{position:absolute;right:10px;top:10px;display:grid;gap:6px}
+.mapbtns button{width:38px;height:38px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:18px;font-weight:700;display:grid;place-items:center;box-shadow:0 1px 2px rgb(0 0 0 / .12)}
+.mapmsg{position:absolute;left:10px;bottom:10px;right:60px;font-size:12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.m-land{fill:var(--land);stroke:var(--coast);stroke-width:1px;vector-effect:non-scaling-stroke}
+.m-park{fill:var(--park)}
+.m-minor{fill:none;stroke:var(--street);stroke-width:1px;vector-effect:non-scaling-stroke}
+.m-ave{fill:none;stroke:var(--ave);stroke-width:1.6px;vector-effect:non-scaling-stroke}
+.m-bridge{fill:none;stroke:var(--ave);stroke-width:3px;vector-effect:non-scaling-stroke}
+.m-lab{fill:var(--label);font-family:var(--f-ui);paint-order:stroke;stroke:var(--land);stroke-width:3px;stroke-linejoin:round}
+.m-lab.area{opacity:.75;font-weight:700;letter-spacing:.12em;font-size:10px}
+.m-lab.ave,.m-lab.st{font-size:10px}
+.m-lab.water{fill:var(--coast);stroke:none;font-style:italic;font-size:12px}
+.m-lab.state{font-weight:700;letter-spacing:.14em;font-size:10px;stroke:var(--land2)}
+.r-walk{fill:none;stroke:var(--accent);stroke-width:4.5px;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.r-sub{fill:none;stroke-width:4px;stroke-dasharray:8 6;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.r-car{fill:none;stroke:var(--muted);stroke-width:3.5px;stroke-dasharray:9 6;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.r-hotel{fill:none;stroke:var(--ink);stroke-width:2.5px;stroke-dasharray:1 6;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.7}
+.r-tram{fill:none;stroke:#C8102E;stroke-width:4px;stroke-dasharray:3 4;vector-effect:non-scaling-stroke}
+.r-rail{fill:none;stroke:#1D4F91;stroke-width:4px;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.r-bus{fill:none;stroke:#3F7D3A;stroke-width:4px;stroke-dasharray:8 5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.pin circle{fill:var(--ink);stroke:var(--surface);stroke-width:2}
+.pin text{fill:var(--bg);font:700 11px var(--f-ui);text-anchor:middle;dominant-baseline:central}
+.pin.done circle{fill:var(--good)}
+.pin.sel circle{fill:var(--accent);stroke-width:3}
+.pin.opt circle{fill:var(--surface);stroke:var(--ink);stroke-width:2;stroke-dasharray:3 2}
+.pin.opt text{fill:var(--ink)}
+.pin .pl{fill:var(--ink);font:700 11px var(--f-ui);text-anchor:start;paint-order:stroke;stroke:var(--land);stroke-width:3.5px;stroke-linejoin:round;dominant-baseline:central}
+.hpin rect{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+.hpin text{fill:var(--accent-ink);font:700 12px var(--f-ui);text-anchor:middle;dominant-baseline:central}
+.me circle.halo{fill:var(--accent);opacity:.18}.me circle.dot{fill:var(--accent);stroke:#fff;stroke-width:2.5}.me .hd{fill:var(--accent);opacity:.8}
+.acc{fill:var(--accent);opacity:.1;stroke:var(--accent);stroke-opacity:.35;stroke-width:1px;vector-effect:non-scaling-stroke}
+.m-sline{fill:none;stroke-width:2.2px;opacity:.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.m-stn{fill:var(--surface);stroke:var(--ink);stroke-width:1.3}
+.m-lab.stn{font-size:9.5px;font-weight:700;fill:var(--muted)}
+.m-lab.stn .stn-l{font-weight:400}
+.m-lm{fill:var(--c-tickets)}
+.m-lab.lm{font-size:10.5px;font-weight:700;fill:var(--ink)}
+.m-lab.st2{font-size:9px;opacity:.85}
+.arr path{fill:var(--ink);stroke:var(--surface);stroke-width:1.4;stroke-linejoin:round}
+.mapbtns button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* timeline */
+.tl{list-style:none;margin:0;padding:0;display:grid}
+.stop{display:grid;grid-template-columns:52px 28px minmax(0,1fr);column-gap:8px}
+.stop .tm{font:700 12.5px var(--f-num);text-align:right;padding-top:12px;color:var(--ink)}
+.stop .rail{position:relative}
+.stop .rail::before{content:"";position:absolute;left:13px;top:0;bottom:0;width:2px;background:var(--line)}
+.stop:first-child .rail::before{top:14px}
+.stop:last-child .rail::before{bottom:auto;height:14px}
+.node{position:absolute;left:3px;top:9px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg);font:700 11px var(--f-ui);display:grid;place-items:center;border:0;padding:0}
+.node.dot{width:12px;height:12px;left:8px;top:14px;background:var(--surface);border:2px solid var(--muted)}
+.node.opt{background:var(--surface);color:var(--ink);border:1.5px dashed var(--ink)}
+.done .node{background:var(--good);color:#fff;border-color:var(--good)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin-block:4px;display:grid;gap:6px;min-width:0}
+.sel .card{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.done .card{background:color-mix(in srgb,var(--good) 7%,var(--surface))}
+.ctop{display:flex;justify-content:space-between;gap:8px;align-items:start}
+.ctitle{font-weight:700;font-size:15px;line-height:1.25;min-width:0}
+.ctitle small{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:2px}
+.csub{font-size:13px;color:var(--muted)}
+.crow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.money{display:flex;gap:10px;font-size:12.5px;color:var(--muted);align-items:baseline}
+.money b{font:700 13.5px var(--f-num);color:var(--ink)}
+.money b.over{color:var(--bad)}.money b.under{color:var(--good)}
+.acts{display:flex;gap:6px}
+.btn{border:1.5px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 11px;font-size:13px;font-weight:700;display:inline-flex;gap:6px;align-items:center;min-height:34px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.on{background:var(--good);border-color:var(--good);color:#fff}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.danger{color:var(--bad)}
+.leg{grid-column:3;display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted);padding:2px 0 6px 2px}
+.bullet{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:10px;padding:0 5px;font:700 11px var(--f-ui);flex:0 0 auto}
+.lg-walk{width:18px;border-top:3px solid var(--accent);flex:0 0 auto}
+.lg-hotel{width:18px;border-top:3px dotted var(--ink);flex:0 0 auto;opacity:.7}
+.lg-car{width:18px;border-top:3px dashed var(--muted);flex:0 0 auto}
+.entries{display:grid;gap:3px;border-top:1px dashed var(--line);padding-top:6px}
+.ent{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;align-items:center;border:0;background:none;padding:2px 0;text-align:left;width:100%}
+.ent span{color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ent b{font:700 12.5px var(--f-num)}
+.maplink{white-space:nowrap;font-size:12px;color:var(--accent);text-decoration:none;font-weight:700}
+
+/* budget */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:12px;min-width:0}
+.panel h2{margin:0;font-size:17px;font-weight:700}
+.panel h3{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.big{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (min-width:640px){.big{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.stat{display:grid;gap:2px}
+.stat span{font-size:12px;color:var(--muted)}
+.stat b{font:700 22px var(--f-num);letter-spacing:-.02em}
+.stat b.good{color:var(--good)}.stat b.bad{color:var(--bad)}
+.meter{position:relative;height:22px;border-radius:6px;background:var(--soft);overflow:hidden}
+.meter span{position:absolute;top:0;bottom:0}
+.meter .spent{background:var(--ink)}
+.meter .plan{background:repeating-linear-gradient(135deg,var(--muted) 0 3px,transparent 3px 7px);opacity:.55}
+.meter .line{width:2px;background:var(--bad)}
+.mkey{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+.mkey i{display:inline-block;width:12px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.rows{display:grid;gap:8px}
+.brow2{display:grid;grid-template-columns:62px minmax(0,1fr) 92px;gap:10px;align-items:center;font-size:13px;border:0;background:none;padding:0;text-align:left;width:100%}
+.brow2 .d{font-weight:700}
+.brow2 .v{font:700 13px var(--f-num);text-align:right}
+.brow2 .v small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.bar{position:relative;height:14px;border-radius:4px;background:var(--soft);overflow:hidden}
+.bar span{position:absolute;top:0;bottom:0}
+.bar .p{background:repeating-linear-gradient(135deg,var(--muted) 0 3px,transparent 3px 7px);opacity:.5}
+.bar .a{background:var(--accent)}
+.bar .a.over{background:var(--bad)}
+.catrow{display:grid;grid-template-columns:12px minmax(0,1fr) auto auto;gap:10px;align-items:center;font-size:13.5px}
+.catrow i{width:12px;height:12px;border-radius:3px}
+.catrow .v{font:700 13px var(--f-num);text-align:right;min-width:70px}
+.catrow .v.m{color:var(--muted);font-weight:400}
+.note{font-size:12.5px;color:var(--muted)}
+
+/* log */
+.logday{display:grid;gap:4px}
+.logday h3{margin:6px 0 2px}
+.lrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:9px 0;border-bottom:1px solid var(--line);border-left:0;border-right:0;border-top:0;background:none;text-align:left;width:100%}
+.lrow .w{font-weight:700;font-size:14px;min-width:0}
+.lrow .a{font:700 14px var(--f-num);text-align:right}
+.lrow .m{grid-column:1/-1;font-size:12px;color:var(--muted)}
+.tag{font-size:10.5px;font-weight:700;border-radius:4px;padding:1px 5px;background:var(--soft);color:var(--muted);margin-left:6px}
+.empty{font-size:13.5px;color:var(--muted);padding:6px 0}
+.row2{display:flex;flex-wrap:wrap;gap:8px}
+textarea{width:100%;min-height:90px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);padding:8px;font:12px var(--f-num)}
+
+/* info / hotels */
+.hgrid{display:grid;gap:12px}
+@media (min-width:760px){.hgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.hcard{border:1.5px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;gap:8px;background:var(--surface);text-align:left;width:100%}
+.hcard[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.hcard .ht{display:flex;justify-content:space-between;gap:8px;align-items:start}
+.hcard .hn{font-weight:700;font-size:15px}
+.hcard .badge{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--soft);white-space:nowrap}
+.hcard[aria-pressed="true"] .badge{background:var(--accent);color:var(--accent-ink)}
+.hcard dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 10px;margin:0;font-size:13px}
+.hcard dt{color:var(--muted)}.hcard dd{margin:0}
+.hcard .hp{font:700 20px var(--f-num)}
+.hcard .hp small{font:400 12px var(--f-ui);color:var(--muted)}
+.todo{display:grid;gap:2px}
+.todo label{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:start;font-size:14px;padding:7px 0;border-bottom:1px solid var(--line)}
+.todo input{width:18px;height:18px;margin-top:1px;accent-color:var(--good)}
+.todo label.on span{color:var(--muted);text-decoration:line-through}
+.facts{display:grid;gap:8px;margin:0;padding:0;list-style:none;font-size:14px}
+.facts li{display:grid;grid-template-columns:78px minmax(0,1fr);gap:10px}
+.facts li b{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding-top:2px}
+
+/* tab bar */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--band);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs .wrap{display:grid;grid-template-columns:repeat(4,1fr);padding-block:6px}
+.tab{border:0;background:none;color:var(--band-muted);display:grid;justify-items:center;gap:3px;padding:6px 0;font-size:11.5px;font-weight:700}
+.tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+.tab[aria-current="page"]{color:var(--band-ink)}
+.tab[aria-current="page"] svg{stroke-width:2.3}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgb(0 0 0 / .45);z-index:40;display:grid;align-items:end;justify-items:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;border-radius:14px 14px 0 0;padding:16px max(16px,env(safe-area-inset-left,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));display:grid;gap:12px;max-height:92vh;overflow:auto}
+.sheet h2{margin:0;font-size:18px}
+.sheet .sub{font-size:13px;color:var(--muted);margin-top:-8px}
+.amt{display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:10px;padding:6px 12px;background:var(--bg)}
+.amt span{font:700 26px var(--f-num);color:var(--muted)}
+.amt input{border:0;background:transparent;font:700 30px var(--f-num);width:100%;outline:none}
+.fld{display:grid;gap:4px;font-size:12.5px;color:var(--muted);font-weight:700}
+.fld input,.fld select{border:1.5px solid var(--line);border-radius:8px;padding:9px 10px;background:var(--bg);font-size:15px;font-weight:400;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chipb{border:1.5px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:700}
+.chipb[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chk{display:flex;gap:8px;align-items:center;font-size:14px}
+.chk input{width:18px;height:18px}
+.sacts{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));z-index:50;background:var(--ink);color:var(--bg);border-radius:999px;padding:9px 16px;font-size:13.5px;font-weight:700}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
+</style>
+</head><body>
+<header class="band">
+  <div class="wrap">
+    <div class="brow">
+      <div class="brand"><b>New Year’s NYC</b><span>Dec 30 – Jan 5 · Jake &amp; Momoka</span></div>
+      <button class="pill" id="pill" type="button" aria-label="Open budget"></button>
+    </div>
+    <nav class="days" id="days" aria-label="Trip days"></nav>
+  </div>
+</header>
+<main class="wrap" id="main"></main>
+<nav class="tabs" aria-label="Sections">
+  <div class="wrap">
+    <button class="tab" data-tab="plan" type="button"><svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg>Plan</button>
+    <button class="tab" data-tab="budget" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c-.6-1-1.7-1.5-3-1.5-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5"/></svg>Budget</button>
+    <button class="tab" data-tab="log" type="button"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Log &amp; sync</button>
+    <button class="tab" data-tab="info" type="button"><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6"/></svg>Hotel &amp; info</button>
+  </div>
+</nav>
+<div id="sheet"></div>
+<script>window.__PWA=true</script>
+<script>
+const MAP={"land":{"Staten Island":"M-6246,19195L-6316,19121L-6312,18881L-6214,18814L-6150,18886L-6168,19130ZM-6738,15350L-6700,15358L-6655,15427L-6669,15474L-6507,15684L-6410,15902L-6369,15935L-6338,15907L-6330,15959L-6224,15998L-6207,16073L-6242,16107L-6159,16492L-6190,16596L-6091,16679L-6149,16672L-6280,16793L-6510,17055L-6723,17331L-6716,17353L-6746,17355Z","Queens":"M12077,17222L12123,17266L12205,17268L12218,17324L12284,17358L12293,17393L12389,17433L12386,17513L12432,17530L12424,17554L12391,17550L12385,17589L12349,17533L12331,17560L12315,17531L12293,17550L12319,17590L12299,17620L12434,17618L12436,17740L12312,17773L12258,17759L12232,17795L12369,17783L12346,17839L12148,17835L12043,17798L11920,17662L11919,17595L11851,17514L11809,17557L11854,17494L11815,17454L11738,17441L11692,17528L11708,17493L11620,17414L11481,17384L11527,17274L11620,17247L11779,17113L11888,17070L12023,17121L12091,17203ZM14181,16306L14264,16297L14348,16444L14349,16614L14311,16689L14312,16766L14219,16821L14203,16861L13961,16594L13913,16426L13975,16160L14050,16170ZM12805,15772L12962,15787L12954,15838L12988,15860L12995,15937L12945,15963L12910,15941L12766,16006ZM12935,15744L12843,15722L12814,15539L12912,15589L12981,15718ZM12267,16046L12154,16029L12273,15856L12288,15635L12335,15623L12329,15594L12437,15501L12622,15712L12611,15914ZM15726,15952L15686,15979L15593,15847L15664,15999L15435,16197L15078,16220L15027,16187L14818,16153L14740,15906L14825,15684L15045,15519L15282,15507L15491,15618L15509,15674L15668,15796ZM17992,15072L18117,15127L18126,15318L18359,15393L18407,15339L18533,15453L18402,15638L18422,15652L18554,15447L18596,15454L18576,15527L18613,15503L18843,15527L18902,15509L18923,15536L18901,15501L18927,15531L18975,15530L18997,15499L19104,15486L19546,15321L19565,15288L19597,15322L19631,15302L19661,15369L19753,15323L19980,15779L19974,15848L20215,16144L20305,16195L20395,16354L20400,16911L20353,16949L20367,16948L20347,16993L20359,16960L20355,16958L20341,16990L20291,16961L20245,16981L20229,17018L20256,17051L20231,17075L20206,17078L20209,17013L20185,16987L20085,17021L20195,17035L20193,17085L20245,17092L20275,17057L20282,16985L20249,17013L20261,17038L20247,17013L20256,17001L20281,16983L20290,16982L20330,17001L20286,16984L20313,17012L20359,17003L20398,16945L20438,17275L20343,17262L20342,17281L20339,17281L20317,17254L20274,17273L20186,17241L20163,17266L20051,17220L19680,17287L19377,17464L19265,17607L19097,17660L18894,17668L18730,17614L18439,17573L17881,17684L17817,17668L17217,17729L16935,17810L16830,17810L16484,17934L16218,17995L16125,18048L16069,18029L15458,18168L14901,18333L14861,18318L14630,18379L14519,18429L14039,18489L12323,19136L11993,19328L10578,19985L8854,19985L9652,19470L10705,18736L10925,18639L11080,18632L11367,18700L11866,18668L11928,18565L12157,18555L12774,18336L12815,18203L13087,18081L13245,18043L13370,18123L13711,17885L13692,17844L13768,17840L13894,17766L13936,17700L14049,17663L14033,17576L14063,17646L14192,17588L14210,17443L14224,17571L14267,17533L14256,17487L14219,17494L14217,17446L14246,17429L14220,17465L14273,17455L14220,17467L14222,17491L14257,17482L14268,17533L14344,17515L14331,17423L14359,17498L14369,17368L14671,17542L14696,17681L14688,17558L14813,17619L14828,17559L14520,17391L14507,17303L14580,17178L14670,17148L14770,17203L14832,17285L14858,17444L14924,17479L14974,17472L14968,17326L14915,17348L14911,17327L14967,17324L14963,17290L14906,17311L14902,17289L14982,17266L14911,17247L14889,17272L14910,17245L14895,17224L14871,17240L14865,17230L14871,17237L14894,17222L14910,17224L14908,17193L14851,17211L14900,17190L14869,17188L14769,17017L14746,17031L14737,16999L14742,16966L14744,17014L14768,17016L14748,16971L14782,16913L14848,16883L14928,16783L15038,16777L15099,16749L15102,16722L15114,16748L15252,16719L15312,16746L15637,16719L15744,16658L15826,16660L16203,16309L16318,16294L16346,16316L16262,16396L16197,16544L15994,16744L15932,16966L15935,17152L15987,17237L15975,17215L15955,17088L15973,17087L15977,17212L16010,17235L15987,17093L16008,17091L16012,17229L16045,17238L16023,17075L16048,17073L16050,17225L16097,17162L16101,16874L16362,16619L16377,16591L16348,16582L16379,16589L16390,16566L16361,16553L16391,16564L16411,16486L16488,16455L16570,16370L16602,16237L16533,16119L16557,16063L16832,15719L16987,15584L17095,15561L17258,15573L17353,15667L17353,15700L17303,15722L17354,15807L17321,15831L17300,15764L17268,15705L17203,15634L17322,15844L17272,16155L17314,16174L17256,16193L17213,16269L17199,16349L17237,16316L17230,16342L17163,16383L17051,16547L17004,16561L17028,16577L17019,16612L16857,16574L16705,16753L16703,16818L16754,16904L16851,16964L16861,17003L16890,16948L17083,16786L17203,16500L17290,16461L17309,16548L17331,16545L17309,16572L17362,16668L17353,16765L17407,16863L17456,16891L17568,16878L17616,16842L17678,16866L17753,16848L17868,16896L17883,16861L17856,16840L17681,16767L17631,16781L17611,16719L17639,16453L17694,16349L17662,16117L17709,16062L17708,15853L17794,15612L17725,15534L17604,15501L17521,15377L17422,15423L17459,15527L17392,15405L17377,15308L17357,15341L17424,15136ZM17857,15003L17374,14878L17816,14334L17924,14377L17987,14999ZM15362,13655L15395,13644L15545,13755L15246,13980L15682,13808L15717,13861L15340,14094L15221,14303L15186,14592L15034,14438L15098,14681L15071,14891L14951,15147L14893,15192L14750,15163L14786,15067L14777,14900L14694,14801L14702,14700L14535,14301L14565,14249L14531,14181L14590,14004L14710,13882L14744,13917L14951,13775L14967,13731L15170,13665L15101,13598L15362,13611ZM14039,13623L14118,13504L14227,13912L14222,14108L14159,14312L14192,14356L14244,14666L14316,14824L14260,14854L14167,14747L14024,14280L13957,14168L13983,14024L13819,13840L13763,13729L14013,13776L14013,13753L13807,13641L13728,13423L13720,13255L13799,13171L14006,13237L14077,13406ZM13259,12704L13321,12896L13337,13097L13443,13443L13515,13578L13664,13645L13687,13772L13820,13923L13823,13955L13769,14004L13665,13979L13584,14091L13586,14142L13679,14219L13679,14253L13748,14268L13753,14226L13785,14212L13854,14269L13878,14421L13731,14515L13680,14711L13736,14958L13786,14995L13794,15069L13938,15045L13962,15017L13992,15038L13941,15103L13926,15067L13873,15096L13932,15190L13911,15214L13875,15173L13817,15218L13880,15501L13956,15427L13897,15556L13934,15672L13926,15764L13852,15937L13876,15941L13870,15970L13870,15943L13834,15959L13794,16074L13713,16082L13724,16217L13685,16407L13635,16506L13620,16722L13553,16929L13515,16930L13457,17045L13433,17191L13391,17234L13088,17200L12446,17252L12257,17191L12241,17149L12295,17026L12468,16912L12448,16898L12520,16882L12596,16939L12693,16862L12726,16903L12813,16912L12989,16713L13023,16816L13100,16860L13159,16779L13111,16771L13090,16833L13111,16751L13149,16776L13175,16650L13329,16677L13369,16655L13119,16616L13117,16566L13197,16483L13191,16402L13244,16368L13248,16134L13285,16041L13248,16005L13294,15936L13386,15877L13490,15664L13525,15491L13456,15315L13423,15291L13385,15422L13452,15519L13420,15630L13357,15713L13336,15559L13296,15512L13249,15507L13135,15266L13099,15276L13098,15203L13024,15085L12992,15082L12881,15169L12829,15134L12882,15093L12860,15077L12780,15076L12572,14988L12311,15058L12361,13681L12405,13445L12484,13362L12553,13018L12537,12922L12486,12853L12484,12771L12439,12704L12362,12380L12405,12340L12463,12332L12762,12589L12811,12671L13031,12680L13119,12633L13144,12348L13107,12285L13139,12218L13208,12326ZM13459,-5623L13508,-5662L13712,-5474L14026,-5279L14024,-5227L14048,-5295L14041,-5225L14079,-5269L14093,-5237L14121,-5335L14146,-5344L14186,-5332L14200,-5260L14643,-5151L14654,-5198L14646,-5151L14684,-5160L14724,-5126L14785,-5126L14789,-5156L14787,-5125L14813,-5131L14819,-5179L14816,-5131L14832,-5166L14831,-5133L14846,-5169L14844,-5138L14857,-5177L14857,-5145L14897,-5187L14989,-5136L15094,-5165L15158,-5136L15169,-5177L15164,-5137L15213,-5144L15339,-5064L15383,-5104L15359,-5058L15422,-5030L15455,-5020L15471,-5064L15482,-5077L15457,-5018L15649,-4976L15605,-4638L15706,-4337L15738,-4394L15717,-4330L15786,-4306L15999,-4476L16387,-4479L16542,-4512L16653,-4583L16500,-4635L16719,-4567L16775,-4627L16801,-4773L16795,-4805L16726,-4828L16805,-4811L16799,-4889L16705,-4985L16586,-4970L16591,-4988L16697,-4994L16736,-5070L16883,-5130L16920,-5183L17029,-5189L17130,-5157L17345,-4933L17403,-4747L17513,-4606L17529,-4461L17656,-4271L17640,-4217L17563,-4160L17349,-4081L17353,-4115L17175,-4273L17350,-4069L17366,-3988L17861,-3269L17949,-3307L17960,-3340L17981,-3310L17864,-3264L17955,-2981L18122,-2642L18642,-2036L18667,-1927L18732,-1882L18773,-1906L18847,-1815L18888,-1828L18980,-1787L19211,-1536L19305,-1306L19513,-1213L19604,-1094L19686,-1037L19709,-1006L19697,-912L19710,-866L19722,-852L19753,-870L19848,-765L19846,-728L19853,-767L19829,-800L19753,-879L19729,-867L19707,-894L19720,-1002L19551,-1191L19533,-1283L19456,-1317L19466,-1263L19348,-1323L19276,-1417L19253,-1516L19139,-1645L18968,-1947L18986,-2043L19025,-2082L18998,-2087L18999,-2192L18926,-2390L19026,-2447L19112,-2577L19038,-2805L18959,-2942L18990,-3067L18931,-3063L18931,-3076L19012,-3084L19048,-3263L19142,-3427L19143,-3474L19328,-3652L21626,-1791L21668,-1793L21716,-1724L22952,-690L23382,-361L23475,-277L23499,-87L23611,1195L23488,1387L22966,2461L22070,2660L21447,2883L21055,3091L21152,3423L21344,4444L21354,5331L21451,7818L21289,8420L21229,9096L21267,9635L21223,9655L21426,10245L21499,10714L21485,10881L21039,11069L20649,11133L20320,11303L20118,11448L20099,11969L20066,12050L20119,12157L20047,12200L20133,12336L20284,12690L20243,12752L20238,12730L20095,12777L20031,12755L20034,12689L20158,12513L20129,12447L20080,12422L20009,12405L19904,12449L19942,12337L19924,12322L19835,12538L19842,12512L19801,12525L19709,12609L19667,12571L19695,12518L19795,12445L19790,12394L19761,12422L19774,12442L19647,12557L19719,12169L19707,12058L19624,11859L19501,11717L19493,11639L19442,11666L19251,11492L19120,11399L19123,11430L19097,11414L19118,11398L19035,11338L18995,11346L18980,11373L19007,11414L19076,11469L19081,11440L19109,11457L19079,11471L19505,11842L19613,12056L19604,12288L19518,12723L19190,12915L19102,12933L18636,13158L18508,13250L18368,13295L18292,13361L18171,13410L18130,13389L18152,13417L18013,13507L17962,13598L17812,13954L17819,14138L17750,14199L17730,14311L17644,14430L17574,14396L17565,14327L17632,14167L17640,14069L17588,14069L17564,14036L17538,14102L17525,14101L17278,14519L17272,14516L17523,14100L17510,14084L17526,14095L17563,14034L17436,13879L17388,13887L17415,13863L17342,13756L17187,13609L17060,13580L16930,13621L16812,13769L16512,14335L16426,14427L16431,14584L16499,14682L16490,14764L16594,14925L16656,14926L16672,14970L16721,14969L16799,15035L16806,15097L16769,15100L16790,15144L16566,15331L16446,15330L16379,15434L16259,15471L16241,15515L16136,15534L16105,15631L16027,15657L15949,15800L15905,15809L15895,15749L15924,15714L15715,15657L15694,15603L15640,15572L15617,15502L15394,15398L15265,15380L15249,15319L15158,15367L15112,15329L15159,15313L15185,15195L15237,15171L15206,15125L15260,14928L15302,14890L15334,14910L15343,14842L15409,14805L15412,14701L15451,14689L15432,14614L15487,14605L15501,14477L15551,14410L15555,14331L15600,14286L15581,14250L15648,14228L15638,14143L15725,14126L15902,14181L16050,14144L16574,13533L16643,13296L16547,13253L16499,13171L16385,13091L16284,13072L16065,12850L15958,12896L15956,12848L15338,13208L15325,13185L15954,12845L15912,12835L15919,12784L15835,12670L15623,12588L15411,12435L15244,12389L14786,12113L14702,12035L14614,12016L14450,11901L14272,11826L14165,11735L14040,11698L13794,11547L13645,11510L13388,11199L13331,11091L13199,10507L13296,10063L13350,9989L13603,9870L13951,9922L14115,9975L14210,9968L14226,9923L13605,9756L13196,9984L13073,10500L13248,11315L13230,11325L13101,11135L13071,11172L13030,11115L12999,11161L12975,11094L12956,11288L12913,11236L12774,11199L12571,10922L12541,10718L12513,10687L12733,10425L12678,10481L12612,10490L12599,10569L12505,10667L12463,10608L12524,10550L12552,10446L12647,10374L12702,10381L12737,10303L12719,10237L12639,10170L12674,10159L12683,10142L12636,10014L12675,10142L12629,10176L12715,10247L12726,10289L12691,10365L12642,10355L12542,10436L12493,10561L12466,10560L12405,10272L12486,10418L12430,10234L12568,10189L12541,10170L12364,10209L12560,11263L12509,11328L12283,11314L12194,11288L12169,11251L11909,9872L11970,9770L11913,9720L11808,9781L11824,9939L12150,11603L11806,11643L11757,11673L11004,11754L10808,11563L10759,11393L10829,11203L10887,11195L10913,11065L11026,10988L11014,10944L10969,10919L10897,10933L10751,11042L10623,11030L10464,10958L10397,10792L10368,10774L10312,10800L10265,10770L10178,10551L10005,10391L10005,10371L10068,10385L10102,10325L10114,10350L10134,10328L10113,10320L10150,10164L10098,10145L10100,10115L10037,10172L10078,10104L10068,10067L10014,10135L10039,10208L10139,10183L10071,10233L10091,10298L10046,10336L9984,10326L9976,10212L9892,10257L9852,10184L10089,10032L10321,9979L10252,9609L10484,9563L10319,8699L10087,8742L9922,7865L9842,7875L9774,7509L9611,7559L9387,6214L9409,6138L9368,6090L8937,6196L8475,6534L8114,6899L8052,7030L7751,7184L7621,7302L7577,7217L7377,7392L7238,7186L7044,7513L6648,6897L6711,6863L6594,6577L6642,6502L6258,6204L6387,6029L5751,5558L5846,5435L5658,5289L5751,5170L4900,4508L4997,4382L4929,4325L4871,4124L4719,3996L4749,3988L4712,3871L4863,3767L5006,3800L5012,3775L4871,3733L4728,3437L4736,3314L4702,3172L4625,3073L4687,2932L4879,2919L4998,2963L5029,2922L4646,2831L4507,2701L4340,2456L4281,2414L3834,2320L3673,2257L3538,2164L3448,2067L3368,1803L3236,1572L2872,1387L3156,1242L3137,1237L3158,1219L3250,1194L3330,1098L3448,820L3485,829L3492,785L3372,754L3361,796L3402,807L3273,1078L3145,1209L2770,1343L2413,1184L2210,1130L1905,1160L1625,1323L1504,1302L1467,1244L1500,1110L1552,1110L1580,1073L1526,1014L1534,988L1584,987L1596,922L1572,907L1593,907L1556,889L1586,817L1643,722L1705,722L1708,677L1632,652L1718,673L1738,635L1709,636L1674,625L1676,617L1751,632L1790,604L1732,593L1791,600L1801,561L1716,531L1814,556L1744,495L1822,475L1823,449L1771,437L1957,129L2121,218L2138,196L2166,211L2133,221L2261,252L2272,212L1992,107L2044,45L2007,35L2069,36L2079,-2L2103,41L2193,-198L2415,-502L3078,-1610L3263,-1878L3387,-1997L3427,-2016L3461,-1994L3525,-2079L3642,-2099L3676,-2162L3732,-2150L3804,-2225L3821,-2268L3782,-2281L3794,-2350L3838,-2366L3799,-2373L3842,-2383L3587,-2502L3558,-2616L3571,-2785L3678,-2989L3788,-3103L3887,-3122L4066,-3094L4128,-3047L4163,-2952L4227,-2911L4334,-2953L4527,-3136L4703,-3231L4810,-3380L4883,-3425L5137,-3705L5298,-3797L5327,-3907L5418,-4009L5460,-4018L5432,-4045L5684,-4372L5715,-4350L5728,-4388L5798,-4413L5808,-4454L5915,-4546L6719,-4331L7090,-3958L7098,-3911L6852,-3640L6650,-3632L6563,-3529L6529,-3363L6562,-3371L6575,-3464L6638,-3537L6717,-3571L6860,-3552L7221,-3802L7078,-3681L7187,-3581L7132,-3522L7138,-3515L7202,-3581L7139,-3507L7238,-3605L7332,-3536L7395,-3605L7358,-3660L7450,-3575L7401,-3599L7336,-3531L7412,-3486L7449,-3425L7455,-3395L7375,-3281L7449,-3275L7489,-3171L7377,-3043L7470,-2924L7435,-2762L7495,-3012L7582,-3085L7634,-2835L7574,-2626L7636,-2613L7943,-2667L7941,-2677L7955,-2679L7955,-2713L7958,-2675L7945,-2667L8103,-2679L8049,-2705L8025,-2771L8030,-2813L8071,-2828L7990,-3177L8021,-3329L8455,-3404L8466,-3425L8542,-3396L8491,-3537L8529,-3597L8454,-3646L8458,-3651L8532,-3601L8573,-3667L8841,-3498L9171,-4001L9295,-3924L9437,-4159L9455,-4148L9287,-3896L9324,-3735L9394,-3753L9403,-3738L9325,-3730L9236,-3587L9153,-3567L9061,-3422L9722,-2968L10537,-2464L10418,-2256L10340,-2284L10271,-2257L10439,-2131L10436,-2097L10369,-2125L10315,-2029L10172,-1896L10047,-1880L10027,-1918L10009,-1881L9887,-1861L10163,-1395L10211,-1377L10210,-1346L10234,-1389L10217,-1339L10236,-1325L10317,-1452L10246,-1485L10259,-1506L10319,-1454L10376,-1563L10400,-1547L10323,-1451L10407,-1413L10391,-1389L10322,-1449L10273,-1376L10405,-1293L10272,-1374L10239,-1323L10434,-1210L10522,-1201L10570,-1129L10649,-1138L10829,-1039L10883,-1046L10968,-1077L11022,-1137L10973,-1233L10788,-1154L10979,-1251L11033,-1143L11082,-1130L11503,-1485L11495,-1511L11516,-1491L11547,-1509L11576,-1624L11762,-1709L11842,-1693L11879,-1775L11832,-1820L11841,-1900L11811,-1895L11780,-1809L11428,-1716L11283,-1798L11196,-1811L11148,-1862L11084,-2009L11106,-2046L11046,-2133L11081,-2200L11070,-2219L11005,-2166L10982,-2213L11070,-2232L11075,-2305L10968,-2435L10934,-2414L10853,-2421L10856,-2441L10967,-2438L10959,-2468L11049,-2616L11029,-2736L11050,-3111L10984,-3155L11008,-3183L10969,-3194L10993,-3274L10838,-3216L10978,-3290L10764,-3273L10764,-3239L10761,-3279L10978,-3292L11000,-3317L10936,-3336L10924,-3318L10820,-3316L10822,-3335L11006,-3338L10972,-3452L10884,-3455L10972,-3455L10977,-3509L11031,-3513L11001,-3535L11026,-3581L10939,-3604L10517,-3550L10503,-3680L10419,-3700L10402,-3652L10386,-3705L10281,-3744L10290,-3850L10244,-3911L10205,-3909L10199,-3934L10196,-3935L10201,-3896L10195,-3935L10159,-3945L10205,-3941L10193,-3980L10239,-4014L10231,-4056L10277,-4114L10388,-4072L10460,-4183L10672,-4200L10723,-4243L10593,-4255L10558,-4287L10586,-4470L10739,-4566L10645,-4701L10652,-4887L10730,-4929L10741,-4990L10829,-4895L11042,-4815L11072,-5043L11280,-5125L11335,-5109L11418,-4987L11507,-4987L11527,-5052L11566,-5020L11529,-5127L11569,-5043L11616,-5061L11564,-5210L11623,-5064L11672,-5041L11697,-5132L11794,-5205L11771,-5294L11873,-5312L11939,-5371L11983,-5386L11875,-5305L11784,-5284L11809,-5208L11887,-5224L11941,-5191L12054,-4869L12099,-4635L12023,-4596L12005,-4556L12017,-4492L12075,-4493L12019,-4489L12036,-4331L12048,-4393L12172,-4394L12200,-4354L12301,-4338L12328,-4277L12402,-4277L12471,-4305L12503,-4356L12528,-4350L12485,-4376L12468,-4446L12534,-4593L12594,-4624L12668,-4621L12787,-4707L12715,-4776L12794,-4720L12824,-4761L12817,-4989L12695,-5199L12729,-5170L12867,-5195L12905,-5233L12888,-5287L12925,-5307L12974,-5265L13059,-5256L13152,-5338L13153,-5370L13167,-5347L13203,-5375L13182,-5415L13205,-5376L13231,-5398L13214,-5436L13240,-5401L13274,-5430L13259,-5476L13280,-5439L13272,-5486L13291,-5453L13356,-5551L13456,-5621L13451,-5664Z","Brooklyn":"M9570,18620L9364,18687L9247,18535L9179,18112L9292,17825L9403,17755L9584,17555L9844,17664L10014,17988L9978,18193L9843,18445L9741,18474ZM4988,16705L5173,16713L5375,16859L5394,16929L5531,17094L5644,17305L5628,17515L5649,17541L5533,17597L5461,17589L5393,17520L5360,17418L5239,17240L4990,17061L4906,16951L4880,16803ZM9185,16777L9235,16365L9260,16766ZM10736,16969L10547,17065L10395,17090L10082,17046L10073,16981L9842,16676L9869,16541L9962,16414L10054,16365L10078,16395L10199,16426L10556,16447L10602,16496L10729,16549L10898,16783L10834,16828ZM9472,16314L9419,16306L9450,16215L9527,16191L9527,16239ZM9382,15873L9387,15739L9464,15706L9527,15759ZM12154,16029L12135,15837L12288,15635L12273,15856ZM9184,16133L9187,15957L9069,15746L9023,15483L9124,15513L9189,15575L9305,15928ZM10516,15195L10763,15194L10645,15090L10741,14979L10985,14972L10954,15521L10528,15975L10365,15936L10369,15733L10202,15602L10183,15405L10286,15251L10416,15190L10239,14776L10522,14863ZM11567,14810L11468,14762L11423,15004L11722,15208L11953,15117L11739,16028L11203,16253L10812,15889L10858,15797L11149,15629L11117,15263L11190,15162L11288,14686L11549,14685ZM12311,15058L12192,15032L12156,14966L12090,14973L11992,14927L12148,14817L12231,14680L12230,14590L12198,14577L12165,14477L12185,14439L12231,14452L12219,14490L12247,14451L12202,14418L12233,14386L12258,14212L12199,14024L12216,13825L12361,13681ZM8581,14940L8870,14036L9542,13565L9699,13805L9608,14268L9592,14605L9205,14771ZM12258,13609L12393,13517L12361,13681ZM10976,13743L11192,13699L11380,13833L11504,14081L11288,14187L11091,14165L10402,14435L10029,14688L9812,14669L9779,14522L9830,14551L9992,14539L10033,13974L9826,14058L9837,13776L10004,13770L10085,13860L10237,13550L10315,13547L10300,13496L10414,13424L10446,13514L10628,13589L10594,13455L10902,13545L11092,13363L11187,13424ZM11713,13928L11430,13340L11602,13153L12004,13008L12124,13200ZM11082,13309L10241,13273L10445,12759L11243,12354L11509,12601L11380,12971L11197,13105ZM2169,1209L2362,1249L2823,1452L2766,1626L2777,1732L2817,1727L2789,1631L2814,1569L2853,1532L2878,1543L2903,1486L2952,1506L2936,1612L2992,1523L3171,1618L3276,1760L3395,2102L3616,2311L4280,2510L4396,2681L4402,2784L4586,3324L4653,3301L4674,3424L4639,3510L4353,3600L4311,3584L4241,3659L4274,3763L4261,3806L4031,3889L4036,3921L4069,3915L4112,4028L3994,4102L4045,4265L3931,4304L3940,4333L4056,4293L4138,4534L4186,4584L4086,4235L4151,4201L4081,4215L4061,4156L4181,4089L4128,3929L4145,3897L4348,3827L4309,3706L4366,3652L4668,3558L4753,3628L4802,3737L4696,3792L4648,3856L4694,3983L4871,4124L4929,4325L4997,4382L4900,4508L5751,5170L5658,5289L5846,5435L5751,5558L6387,6029L6258,6204L6642,6502L6594,6577L6711,6863L6648,6897L7044,7513L7238,7186L7377,7392L7577,7217L7621,7302L7751,7184L8052,7030L8114,6899L8475,6534L8937,6196L9368,6090L9409,6138L9387,6214L9611,7559L9774,7509L9842,7875L9922,7865L10087,8742L10319,8699L10484,9563L10252,9609L10321,9979L10089,10032L9852,10184L9892,10257L9843,10332L9897,10474L10036,10525L10140,10647L10206,10806L10376,11038L10328,11103L10254,11436L10358,11805L9875,11930L9554,12211L9668,12330L9645,12348L9545,12217L9502,12228L9388,12111L9224,11674L9176,11624L9060,11594L8489,10590L8457,10617L9008,11609L8986,11695L9001,11780L9269,12231L9285,12332L9445,12423L9309,12537L9343,12495L9313,12441L9029,12617L8983,12626L8901,12584L8672,12362L8558,12324L8545,12277L8392,12105L8371,12039L8408,12057L8427,11991L8304,11941L8244,11830L8252,11798L8145,11711L8028,11775L7963,11765L7806,11554L7783,11339L7705,11322L7584,11178L7561,11175L7560,11210L7505,11175L7498,11237L7636,11417L7633,11446L7691,11542L7639,11443L7683,11412L7707,11427L7715,11396L7741,11420L7742,11461L7713,11440L7704,11460L7751,11478L7734,11542L7808,11622L7754,11645L7814,11633L7907,11790L8118,11941L8366,12240L8472,12411L8520,12384L8548,12403L8548,12485L8674,12660L8584,12816L8326,13061L8179,13143L8126,13219L8115,13299L8142,13334L8092,13372L8211,13515L8122,13595L8000,13454L7950,13496L7924,13468L7798,13509L7549,13743L7513,13877L7389,14019L7103,14154L7078,14126L6893,14102L6650,13803L6398,13734L5369,13097L5270,13164L5286,13212L5452,13325L6412,13897L6420,13882L6286,13793L6297,13783L6532,13940L6471,13936L6519,13966L6508,13984L6543,13938L6554,13944L6523,13998L6500,13995L6499,14032L6663,14152L6687,14253L6905,14228L7044,14275L7116,14456L7029,14728L7045,14864L7106,15002L7081,15011L7095,15043L7229,15113L7379,15123L7509,15230L7470,15308L7258,15374L7255,15409L7290,15433L7430,15374L7506,15316L7499,15291L7615,15383L7564,15509L7426,15644L7440,15598L7398,15637L7385,15704L7407,15706L7360,15852L7308,15906L6886,16066L6761,16043L6672,15879L6733,15536L6633,15423L6634,15353L6537,15337L6646,15482L6634,15491L6523,15346L6547,15324L6517,15341L6490,15312L6542,15318L6251,14982L6263,15002L6238,14994L6251,14980L6159,14865L6142,14877L6178,14845L6134,14868L6149,14853L6119,14849L6147,14810L6112,14840L6136,14817L6074,14762L6087,14725L6059,14749L6005,14719L6018,14748L5981,14749L6042,14819L6005,14781L5976,14819L6074,14907L6059,14922L5973,14820L5991,14768L5937,14834L6017,14935L6131,15010L6287,15209L6389,15282L6385,15320L6450,15388L6467,15372L6452,15390L6482,15437L6556,15497L6608,16015L6304,16109L6243,15946L6062,15958L6018,15915L6030,16014L6069,16060L6038,16072L5997,15929L5916,15988L5999,16093L6044,16202L5825,16265L5595,16212L5335,15898L5370,15691L5331,15680L5349,15608L5326,15682L5354,15696L5305,15675L5383,15487L5524,15361L5487,15105L5578,15029L5547,14997L5362,15148L5404,15117L5420,15142L5417,15151L5400,15121L5376,15142L5419,15168L5400,15185L5375,15144L5364,15161L5408,15221L5344,15162L5420,15341L5219,15521L5251,15568L5240,15619L5256,15582L5232,15679L5239,15621L5182,15711L5228,15750L5213,15764L5180,15712L5144,15737L5217,15806L5198,15822L5142,15738L5114,15761L5207,15852L5186,15869L5113,15763L5100,15795L5530,16337L5575,16354L5581,16334L5592,16338L5596,16374L5610,16331L5608,16392L5649,16349L5610,16394L5640,16408L5675,16355L5645,16410L5769,16417L5770,16408L5708,16402L5689,16392L5773,16384L5683,16373L5686,16357L5830,16378L5775,16388L5773,16408L5825,16409L5824,16418L5772,16415L5839,16429L5840,16384L5984,16357L5843,16386L5844,16416L5953,16411L5841,16430L5920,16428L5992,16476L6099,16400L6415,16352L6466,16382L6626,16291L6760,16284L6847,16248L6921,16285L7142,16308L7195,16286L7269,16300L7314,16268L7405,16278L7491,16255L7522,16212L7788,16069L8030,16083L8097,16036L8206,16185L8155,16331L8296,16716L8441,17537L8483,17531L8442,17540L8457,17609L8487,17671L8520,17665L8493,17691L8535,17983L8710,18329L8458,18860L8286,18920L8286,18968L8258,18978L8191,18972L8066,19031L7813,19089L7490,19111L7206,19226L7124,19234L6992,18888L7042,18651L7037,18541L6904,18299L6924,18229L6889,18116L6838,18038L6769,18080L6828,18023L6762,17985L6754,18010L6751,17989L6746,18007L6644,18055L6750,17982L6686,17978L6569,18058L6386,18108L6251,18043L6250,18000L6197,17984L6146,18039L6199,18060L6203,18094L6063,18120L5828,18215L5778,18200L5737,18131L5770,18069L5742,17935L5778,17642L5731,17264L5596,16976L5550,16948L5470,16790L5179,16566L5046,16534L4932,16441L4814,16500L4721,16685L4650,16674L4358,16408L4319,16409L4258,16354L4249,16300L4299,16241L4266,16210L4225,16239L4202,16207L4175,16240L4117,16227L4042,16332L4125,16463L4191,16524L4246,16521L4282,16600L4330,16612L4335,16587L4452,16664L4815,17049L4910,17206L5031,17240L5215,17422L5350,17643L5475,17720L5520,17771L5514,17840L5548,17854L5520,17904L5282,18053L5224,18160L5128,18213L5026,18199L4991,18209L4983,18254L4900,18243L4866,18207L4778,18209L4659,18250L4452,18018L4412,18058L4449,18014L4439,17984L4392,18037L4378,18020L4438,17982L4434,17963L4393,17992L4383,17979L4431,17954L4405,17914L4726,17638L4706,17613L4672,17632L4372,17895L4355,17879L4350,17883L4367,17900L4332,17923L4348,17872L4311,17892L4323,17859L4289,17889L4314,17850L4218,17819L4270,17848L4236,17843L4214,17829L4168,17777L4208,17809L4191,17761L4167,17770L4178,17654L4158,17652L4179,17645L4155,17644L4185,17630L4166,17633L4182,17573L4165,17594L4187,17481L4241,17418L4213,17425L4220,17397L4238,17416L4231,17390L4213,17393L4235,17383L4215,17310L4210,17366L4197,17328L4172,17334L4170,17299L4191,17328L4213,17309L4180,17276L4152,17278L4164,17298L4138,17270L4114,17300L4136,17269L4101,17262L4068,17289L4080,17265L4101,17260L4145,17271L4151,17265L3997,17217L3991,17294L4120,17542L4098,17564L4131,17550L4085,17621L4114,17817L4159,17896L4209,17877L4162,17912L4183,17935L4239,17919L4184,17938L4240,18036L4103,18061L4111,18115L4337,18091L4378,18131L4372,18224L4438,18208L4420,18181L4426,18165L4444,18224L4597,18318L4525,18289L4614,18360L4769,18340L5043,18361L5426,18184L5608,18198L5688,18262L5703,18373L5674,18464L5696,18503L5646,18541L5646,18521L5513,18569L5483,18525L5385,18558L5288,18521L5329,18568L5370,18562L5400,18605L5447,18613L5533,18610L5551,18564L5620,18547L5653,18545L5651,18575L5662,18541L5742,18546L5795,18618L5773,18676L5477,18704L4873,18514L4686,18480L4247,18498L4160,18524L4136,18572L4072,18563L4053,18530L4054,18556L4016,18551L4046,18530L3861,18544L3737,18511L3725,18540L3730,18511L3699,18507L3702,18548L3663,18547L3685,18542L3662,18515L3628,18516L3657,18545L3621,18544L3622,18533L3573,18531L3624,18528L3626,18540L3625,18516L3616,18504L3532,18504L3534,18529L3495,18504L3489,18535L3432,18505L3325,18506L3325,18532L3364,18534L3316,18535L3324,18519L3314,18506L3311,18534L3287,18534L3294,18508L3276,18509L3281,18531L3272,18532L3240,18475L3158,18485L3203,18530L3145,18486L3116,18487L3157,18528L3104,18488L3074,18490L3112,18527L3062,18490L3030,18490L3056,18526L2984,18487L3009,18524L2937,18484L2965,18524L2922,18483L2890,18482L2929,18522L2843,18479L2884,18520L2831,18479L2801,18481L2841,18519L2790,18481L2760,18483L2798,18521L2743,18483L2235,18543L2251,18653L2555,18618L3142,18765L3999,18735L4127,19301L4090,19357L3807,19372L3804,19406L3788,19374L3671,19335L3650,19384L3162,19389L3158,19368L3003,19343L2986,19403L2973,19373L2891,19368L2852,19397L2874,19417L2315,19516L2214,19508L2186,19533L2181,19504L2050,19505L1995,19518L1995,19564L1976,19522L1819,19531L1774,19547L1772,19604L1763,19556L1701,19549L1079,19616L1060,19654L1051,19631L996,19633L890,19668L907,19730L864,19669L731,19692L744,19770L708,19694L596,19711L561,19728L569,19805L553,19733L398,19758L387,19828L344,19761L228,19779L197,19793L196,19855L162,19849L193,19846L185,19790L130,19775L13,19814L47,19850L-9,19794L-172,19821L-133,19847L-238,19814L-310,19829L-287,19967L-257,19969L-284,19985L-322,19980L-294,19968L-317,19830L-678,19876L-727,19886L-723,19908L-735,19887L-865,19907L-908,19919L-910,19958L-916,19919L-944,19917L-1073,19937L-1095,19964L-1110,19943L-1260,19946L-1281,19983L-1290,19950L-1329,19942L-1450,19947L-1465,19970L-1518,19936L-1683,19931L-1827,19951L-1868,19985L-1896,19792L-1942,19743L-2249,19609L-2536,19560L-2627,19523L-2700,19443L-2786,19107L-2728,18962L-2655,18866L-2371,18695L-2197,18655L-1873,18723L-1688,18736L-1536,18711L-1502,18809L-998,18959L-874,18939L-711,19007L-623,18976L-565,18896L-592,18873L-496,18748L-510,18684L-586,18749L-675,18912L-840,18802L-981,18755L-997,18682L-865,18362L-1305,18630L-1354,18639L-1702,18534L-1717,18410L-1525,18279L-1662,18243L-1650,18182L-1530,18150L-1195,17944L-1321,17994L-1187,17910L-1199,17890L-1312,17957L-1273,17921L-1514,18068L-1255,17901L-1294,17839L-1696,18103L-1718,18156L-1719,18083L-1508,17949L-1575,17854L-1622,17883L-1641,17850L-1550,17790L-1588,17806L-1555,17780L-1584,17730L-1555,17738L-1443,17623L-1450,17586L-1523,17631L-1457,17574L-1480,17552L-1651,17643L-1706,17601L-1603,17506L-1643,17435L-1551,17373L-1776,17483L-1842,17323L-1993,17090L-2153,16928L-2606,16575L-2933,16423L-3300,16364L-3445,16263L-4221,16126L-4445,15952L-4627,15702L-4726,15622L-4800,15413L-4993,15162L-5080,14986L-5196,14371L-5220,13957L-5149,13302L-4791,12326L-4955,12259L-4784,12309L-4698,12142L-4786,12034L-4560,11734L-4456,11818L-4437,11795L-4411,11816L-4431,11789L-4408,11761L-4376,11781L-4260,11628L-4139,11724L-4145,11705L-4121,11673L-4139,11704L-4090,11749L-4064,11723L-4086,11752L-4065,11767L-3883,11518L-4195,11271L-4165,11236L-3855,11479L-3809,11421L-3781,11442L-3767,11426L-3904,11306L-3785,11391L-3723,11368L-3806,11289L-3792,11258L-3840,11127L-3782,11036L-3884,10993L-3840,10939L-3776,11027L-3731,10977L-3830,10888L-3725,10971L-3676,10957L-3631,10995L-3614,10973L-3826,10801L-3503,11028L-3478,11010L-3462,10981L-3570,10891L-3449,10965L-3694,10765L-3676,10746L-3538,10856L-3473,10788L-3643,10648L-3631,10633L-3550,10705L-3511,10698L-3470,10635L-3527,10586L-3512,10561L-3413,10635L-3305,10656L-3257,10715L-3215,10672L-3395,10535L-3378,10511L-3194,10652L-3133,10573L-3356,10383L-3143,10526L-3113,10494L-3091,10510L-3069,10479L-3298,10285L-3256,10232L-3024,10413L-2988,10367L-3183,10204L-3178,10164L-2956,10331L-2903,10258L-3159,10054L-2997,9908L-2868,10014L-2839,9990L-2685,10113L-2623,10025L-2869,9823L-2754,9773L-2412,10046L-2316,9931L-2561,9726L-2569,9699L-2492,9630L-2419,9618L-2206,9788L-2166,9740L-2048,9832L-2212,9683L-2186,9648L-2008,9781L-1981,9744L-2071,9680L-2086,9716L-2138,9674L-2106,9652L-2124,9637L-2140,9672L-2192,9631L-2160,9609L-2334,9461L-2303,9482L-2287,9447L-2237,9488L-2267,9511L-2246,9528L-2231,9492L-2179,9533L-2196,9566L-2172,9557L-2162,9490L-2163,9560L-1993,9689L-1974,9661L-2074,9578L-2051,9543L-2132,9476L-2097,9430L-1782,9671L-1647,9504L-1933,9275L-1876,9238L-1823,9241L-1788,9213L-1810,9197L-1745,9155L-1685,9165L-1604,9055L-1604,8993L-1623,9070L-1609,8989L-1573,8936L-1595,8921L-1565,8734L-1583,8705L-1712,9025L-1776,8999L-1806,9065L-1873,9040L-1931,9177L-2181,9105L-2263,9321L-2274,9321L-2087,8802L-2145,8780L-2323,9210L-2344,9198L-2284,9039L-2518,9046L-2660,9428L-3015,9485L-3112,9455L-3195,9343L-3253,8839L-3269,8763L-3317,8702L-3163,8768L-3077,9445L-3038,9453L-3031,9385L-2722,9356L-2604,9038L-2560,9033L-2558,8985L-2607,8972L-2604,8915L-2660,8906L-2667,8818L-2888,8913L-2678,8809L-2705,8779L-2751,8789L-2890,8729L-2968,8799L-2856,8674L-2887,8646L-3009,8767L-2781,8513L-2814,8484L-2962,8643L-3063,8559L-2916,8392L-2949,8363L-3219,8667L-3272,8632L-3143,8482L-3184,8433L-3205,8448L-3188,8428L-3219,8387L-3191,8299L-3230,8276L-3238,8315L-3248,8297L-3279,8317L-3239,8269L-3247,8234L-3206,8228L-3197,8160L-3354,8148L-3369,8094L-3296,8090L-3304,8013L-3241,8004L-3239,7949L-3345,7951L-3226,7933L-3253,7885L-3334,7887L-3313,7811L-2768,7370L-2710,7449L-2876,7582L-2834,7636L-2857,7660L-2784,7726L-2502,7409L-2595,7288L-2680,7355L-2693,7340L-2360,7075L-2279,7047L-2183,7084L-1938,6614L-1768,6648L-1746,6594L-1853,6457L-1834,6395L-1637,5956L-1642,5917L-1591,5893L-1476,5592L-1447,5575L-1454,5536L-1237,5171L-1265,5146L-1229,5066L-1023,5031L-1000,5098L-923,5104L-862,5004L-700,5047L-699,4989L-671,4981L-551,4999L-543,4958L-290,4925L-284,4945L-78,4955L-77,4896L37,4914L80,4889L64,4935L87,4941L100,4901L90,4941L115,4904L111,4946L136,4889L97,4878L140,4885L124,5010L167,5075L235,5084L210,5197L242,5218L317,5021L341,5028L259,5241L324,5310L377,5214L394,5224L337,5335L460,5375L360,5599L390,5596L496,5407L597,5519L642,5533L526,5381L575,5366L747,5561L777,5554L563,5284L604,5249L858,5524L887,5494L604,5180L618,5163L907,5400L929,5358L648,5125L750,5167L757,5128L451,4877L473,4849L550,4920L628,4863L453,4699L486,4661L751,4902L754,4780L611,4571L648,4543L821,4787L802,4952L829,4956L828,5004L1053,5170L1056,5113L903,4987L903,4764L856,4663L848,4518L881,4408L842,4391L898,4335L863,4311L906,4312L892,4278L918,4273L945,4137L972,4128L941,4083L1074,3666L1151,3519L1252,3412L1219,3369L1233,3321L1253,3293L1310,3324L1437,3105L1547,2791L1508,2759L1588,2746L1827,2841L1860,2815L1859,2772L1819,2731L1676,2740L1663,2670L1550,2680L1603,2357L1566,2113L1496,1897L1494,1771L1701,1437L1829,1317L1945,1234ZM6414,13899L6474,13918L6422,13887Z","Manhattan":"M-2693,7340L-2713,7317L-2391,7061L-2375,7087ZM-2161,7019L-2347,6952L-2312,6861L-2109,6928ZM-2074,6860L-2259,6792L-2223,6698L-2009,6781ZM-1974,6705L-2172,6636L-2137,6541L-1938,6614ZM-5355,6697L-5288,6645L-5275,6666L-5352,6702L-5367,6799L-5430,6827L-5589,6736L-5633,6667L-5690,6705L-5712,6671L-5700,6664L-5686,6684L-5641,6655L-5667,6615L-5664,6552L-5574,6537L-5387,6641ZM-1746,6594L-2091,6466L-2058,6381L-1853,6457ZM-2986,6321L-2984,6296L-2966,6300L-2973,6325L-2962,6300L-2946,6311L-2965,6327L-2886,6348L-2820,6427L-2741,6406L-2730,6380L-2707,6372L-2678,6405L-2690,6430L-2711,6436L-2737,6416L-2811,6438L-2750,6510L-2701,6495L-2749,6514L-2743,6535L-2684,6544L-2715,6548L-2716,6574L-2696,6576L-2697,6594L-2718,6611L-2724,6742L-2797,6867L-2942,6967L-3040,6957L-3124,7009L-3090,7060L-2964,7048L-2964,7057L-3093,7072L-3165,7177L-3173,7171L-3102,7067L-3130,7012L-3419,7187L-3391,7235L-3322,7207L-3454,7285L-3397,7238L-3425,7190L-3592,7288L-3553,7354L-3631,7448L-3643,7439L-3573,7352L-3606,7296L-3672,7328L-3729,7334L-3834,7311L-3869,7286L-3928,7190L-3931,7132L-3915,7086L-3391,6436L-3351,6316L-3318,6303L-3099,6291ZM-1834,6395L-2025,6306L-1979,6211L-1794,6296ZM-1767,6210L-1941,6131L-1889,6028L-1709,6110ZM-1591,5867L-1775,5784L-1728,5689L-1550,5767ZM-1520,5689L-1688,5611L-1642,5516L-1476,5592ZM-5056,5453L-4867,5624L-4899,5658L-4910,5733L-4976,5732L-5004,5761L-5165,5603L-5207,5646L-5052,5807L-5200,5945L-5368,5766L-5288,5685L-5310,5663L-5152,5497L-5127,5522L-5086,5482L-5105,5465L-5084,5480ZM-1408,5454L-1530,5383L-1365,5177L-1277,5221ZM3157,-2055L3052,-1912L2965,-1757L2578,-1171L2502,-1094L2380,-933L2316,-788L2092,-530L1862,-234L1768,-155L1588,56L1553,65L1593,-67L1686,-203L1729,-328L1770,-399L1817,-438L2244,-1088L2266,-1116L2279,-1106L2354,-1206L2451,-1396L2532,-1515L2607,-1584L2880,-2034L2892,-2035L2911,-2068L2899,-2075L2904,-2088L2931,-2084L2975,-2197L3194,-2447L3298,-2484L3358,-2549L3372,-2536L3349,-2476L3356,-2346L3343,-2276L3279,-2156ZM3550,-3414L3559,-3445L3572,-3442L3576,-3383L3522,-3360L3490,-3369L3413,-3278L3416,-3317L3480,-3388L3471,-3397L3479,-3447L3516,-3482L3535,-3488L3545,-3474L3536,-3436ZM4899,-5718L5033,-5482L5344,-5314L5443,-5225L5529,-5070L5582,-4942L5584,-4867L5470,-4665L5371,-4565L5383,-4554L5324,-4481L5304,-4493L5218,-4446L5181,-4407L5186,-4377L4875,-3943L4819,-3726L4682,-3589L4578,-3573L4442,-3452L4377,-3433L4344,-3443L4128,-3597L3793,-3665L3726,-3743L3705,-3799L3735,-3962L3988,-4349L4014,-4410L4027,-4407L4146,-4551L4240,-4593L4324,-4546L4379,-4533L4545,-4522L4540,-4632L4506,-4648L4589,-4643L4491,-4655L4523,-4626L4513,-4555L4396,-4547L4394,-4562L4458,-4655L4402,-4663L4363,-4700L4358,-4786L4440,-4937L4475,-5052L4479,-5135L4460,-5241L4454,-5257L4413,-5243L4410,-5252L4452,-5261L4432,-5297L4429,-5343L4495,-5568L4449,-5595L4460,-5614L4455,-5597L4498,-5572L4507,-5586L4492,-5597L4511,-5593L4496,-5602L4507,-5619L4484,-5636L4466,-5624L4479,-5645L4511,-5624L4597,-5769L4692,-5772L4838,-5759ZM3807,-8882L3843,-8554L3882,-7742L3894,-7741L3894,-7282L3884,-7282L3878,-7160L3891,-7159L3891,-7123L3851,-6613L3869,-6513L3916,-6395L4119,-6103L4190,-5972L4283,-5679L4298,-5672L4309,-5535L4298,-5192L4277,-5091L4200,-4951L3923,-4749L3725,-4563L3619,-4371L3700,-4322L3690,-4307L3614,-4349L3532,-4129L3388,-3915L3168,-3766L3100,-3700L3066,-3626L3047,-3472L3102,-3255L3120,-3291L3144,-3280L3144,-3244L3159,-3230L3129,-3177L3168,-3033L3198,-2989L3204,-2907L3126,-2740L2643,-2094L2524,-1890L2157,-1353L1756,-872L1631,-658L1498,-502L997,259L981,285L992,292L932,387L854,506L846,500L777,621L764,614L748,645L784,667L744,654L729,684L742,692L735,705L752,703L736,734L729,717L684,808L697,815L678,851L650,1030L661,1035L656,1076L619,1197L633,1576L601,1580L471,1508L467,1522L504,1540L467,1524L463,1547L494,1559L463,1550L463,1566L463,1577L465,1568L485,1577L466,1577L467,1591L494,1591L586,1646L607,1607L596,1598L610,1609L595,1658L565,1639L565,1661L544,1672L469,1630L509,1841L518,1863L533,1865L517,1880L555,2078L678,2221L718,2304L723,2389L701,2509L718,2515L547,3467L450,3808L301,4229L248,4308L177,4375L-108,4417L-104,4461L-708,4538L-728,4451L-742,4445L-1192,4526L-1525,4607L-1787,4790L-1769,4839L-1805,4865L-1736,4948L-1808,5011L-1860,4950L-1903,4938L-1913,4946L-1853,5025L-1870,5040L-1883,5024L-1892,5032L-1888,5019L-1967,4927L-1993,4949L-1929,5015L-1937,5022L-1994,4950L-2010,4963L-2020,4952L-2056,4984L-2046,4995L-2074,5020L-1981,5130L-2000,5146L-2092,5036L-2124,5061L-2102,5084L-2126,5062L-2138,5073L-2037,5193L-2047,5217L-2164,5096L-2243,5142L-2134,5267L-2150,5282L-2153,5258L-2165,5265L-2259,5155L-2472,5334L-2420,5425L-2341,5380L-2327,5404L-2406,5449L-2391,5477L-2414,5490L-2496,5344L-2628,5387L-2622,5410L-2639,5413L-2599,5529L-2627,5452L-2644,5457L-2642,5488L-2657,5461L-2676,5466L-2667,5501L-2686,5469L-2706,5476L-2686,5540L-2695,5547L-2732,5483L-2749,5488L-2750,5539L-2775,5493L-2792,5495L-2792,5577L-2806,5496L-2824,5498L-2828,5539L-2840,5538L-2828,5517L-2830,5447L-2863,5441L-2886,5539L-2880,5487L-2892,5480L-2924,5528L-2895,5478L-2921,5461L-2957,5516L-2924,5459L-2953,5441L-2964,5458L-3132,5251L-3175,5163L-3168,5087L-3187,5081L-3184,5101L-3189,5114L-3188,5104L-3201,5110L-3191,5081L-3242,5089L-3261,5059L-3161,5033L-3214,5046L-3279,5026L-3318,4875L-3299,4777L-3258,4759L-3276,4778L-3250,4783L-3221,4683L-3277,4658L-3185,4126L-3188,4181L-3089,4202L-3088,4135L-3063,4063L-3166,4040L-3181,4100L-3096,3484L-2801,3518L-2789,3451L-2776,3363L-2821,3355L-2816,3326L-2911,3310L-2911,3272L-2780,3294L-2772,3238L-2803,3232L-2796,3192L-2790,3159L-2744,3164L-2669,2679L-2969,2625L-2962,2577L-2660,2615L-2647,2417L-2900,2391L-2870,2144L-2628,2171L-2609,1885L-2867,1880L-2867,1851L-2606,1854L-2592,1838L-2603,1822L-2600,1776L-2700,1769L-2699,1739L-2599,1745L-2570,1325L-2622,1322L-2626,1289L-2568,1292L-2563,1202L-2663,1192L-2659,1124L-2666,1143L-2730,1138L-2725,1089L-2663,1093L-2658,1113L-2653,1045L-2712,1043L-2754,1027L-2499,1039L-2487,1028L-2480,982L-2712,945L-2708,915L-2489,945L-2483,900L-2469,902L-2453,790L-2498,783L-2495,748L-2711,715L-2700,673L-2489,702L-2483,669L-2437,675L-2423,568L-2497,555L-2493,523L-2523,519L-2530,560L-2519,564L-2544,562L-2533,559L-2528,519L-2569,512L-2576,554L-2565,558L-2594,555L-2579,553L-2575,513L-2623,505L-2629,546L-2618,550L-2647,547L-2634,547L-2627,506L-2677,497L-2681,538L-2671,542L-2685,541L-2680,488L-2671,446L-2485,472L-2476,407L-2664,376L-2654,333L-2466,359L-2457,293L-2649,263L-2640,220L-2451,246L-2441,176L-2632,147L-2623,105L-2526,119L-2493,7L-2593,-33L-2594,-46L-2467,2L-2406,-209L-2457,-233L-2416,-215L-2455,-238L-2450,-246L-2440,-238L-2410,-227L-2473,-264L-2402,-224L-2397,-240L-2529,-313L-2527,-326L-2512,-327L-2520,-312L-2428,-261L-2419,-277L-2391,-261L-2329,-475L-2340,-481L-2327,-503L-2317,-497L-2301,-526L-2312,-532L-2300,-554L-2289,-548L-2144,-813L-2126,-803L-2092,-867L-2132,-891L-2111,-928L-2277,-1025L-2235,-1098L-2066,-1009L-2041,-1055L-2016,-1041L-2008,-1056L-2045,-1077L-2036,-1092L-2051,-1100L-1996,-1078L-1988,-1093L-2018,-1111L-1951,-1230L-1922,-1213L-1884,-1282L-2071,-1391L-2058,-1407L-1872,-1302L-1816,-1404L-2003,-1508L-1991,-1530L-1803,-1427L-1769,-1490L-1952,-1591L-1935,-1623L-1958,-1625L-1952,-1636L-1680,-1489L-1655,-1505L-1615,-1577L-1880,-1728L-1857,-1765L-1593,-1618L-1567,-1665L-1576,-1689L-1541,-1727L-1818,-1887L-1797,-1915L-1524,-1762L-1465,-1868L-1741,-2026L-1719,-2055L-1447,-1902L-1388,-2010L-1664,-2166L-1642,-2194L-1440,-2080L-1446,-2093L-1397,-2157L-1605,-2272L-1582,-2312L-1376,-2198L-1339,-2265L-1351,-2271L-1341,-2289L-1330,-2282L-1301,-2335L-1349,-2366L-1341,-2382L-1291,-2353L-1259,-2389L-1263,-2405L-1443,-2504L-1426,-2535L-1246,-2435L-1218,-2485L-1387,-2560L-1361,-2581L-1407,-2610L-1194,-2497L-1166,-2546L-1192,-2543L-1212,-2558L-1205,-2571L-1267,-2607L-1269,-2587L-1370,-2641L-1355,-2652L-1364,-2663L-1357,-2674L-1175,-2574L-1064,-2773L-1034,-2789L-1017,-2831L-1045,-2838L-921,-3061L-877,-3063L-748,-3299L-974,-3284L-963,-3304L-749,-3317L-752,-3356L-692,-3467L-681,-3514L-461,-3926L-521,-4005L-600,-3909L-517,-4024L-458,-3932L-428,-3988L-486,-4019L-479,-4031L-423,-3999L-393,-4056L-502,-4051L-490,-4066L-390,-4062L670,-6055L965,-6559L1062,-6775L1337,-7303L1687,-7815L1702,-7805L1760,-7902L1735,-7911L1759,-7947L1768,-7940L1751,-7914L1763,-7906L1786,-7941L1776,-7946L1792,-7973L1771,-8040L1761,-8045L1752,-8026L1694,-8058L1720,-8105L1777,-8073L1767,-8054L1811,-7977L1838,-8026L1860,-8080L1836,-8093L1843,-8107L1724,-8182L1918,-8562L1944,-8549L1997,-8654L2105,-8595L2194,-8721L2274,-8882Z","Bronx":"M7005,-5067L6918,-5068L6814,-5163L6925,-5231L7017,-5144ZM7676,-5413L7740,-5403L7739,-5356L7795,-5370L7876,-5331L8116,-5075L8125,-5104L8256,-5014L8453,-4983L8601,-4927L8785,-4791L8867,-4692L9089,-4556L9174,-4445L9210,-4219L9139,-4086L8987,-3971L8746,-3981L8576,-3926L7980,-4071L7784,-4094L7670,-4149L7564,-4428L7522,-4464L7406,-4485L7352,-4754L7439,-5193L7528,-5292L7516,-5311L7537,-5302L7520,-5330L7538,-5304L7575,-5326L7686,-5315L7732,-5350ZM7044,-5639L6861,-5452L6729,-5470L6764,-5497L6770,-5640L6743,-5652L6789,-5652L6798,-5766L6887,-5819ZM14011,-8881L14050,-8774L14091,-8766L14068,-8749L14104,-8688L14342,-8680L14328,-8640L14247,-8659L14333,-8636L14182,-8641L14246,-8643L14192,-8661L14117,-8642L14010,-8525L14022,-8468L14090,-8477L14000,-8446L14003,-8408L14048,-8430L14004,-8407L14016,-8360L14055,-8346L14158,-8389L14060,-8345L14071,-8313L13996,-8270L14012,-8221L14060,-8213L14103,-8302L14187,-8254L14197,-8283L14249,-8295L14262,-8340L14272,-8316L14365,-8358L14413,-8424L14533,-8427L14626,-8284L14607,-8215L14634,-8194L14623,-8143L14653,-8139L14636,-8105L14677,-8092L14655,-8068L14688,-7968L14674,-7864L14696,-7792L14798,-7653L14895,-7578L15007,-7611L15120,-7555L15152,-7502L15383,-7384L15400,-7302L15372,-7274L15338,-7295L15261,-7277L15170,-7109L15102,-7079L15032,-6980L15061,-6924L15031,-6980L14946,-6935L14875,-6942L14883,-6986L14861,-6974L14875,-7000L14812,-7062L14829,-7076L14883,-6988L14907,-7035L14888,-7040L14797,-7134L14908,-7036L14883,-7101L14809,-7166L14745,-7291L14625,-7395L14751,-7239L14795,-7176L14786,-7166L14646,-7343L14622,-7402L14595,-7391L14628,-7316L14585,-7387L14640,-7295L14623,-7285L14731,-7193L14753,-6983L14809,-6909L14875,-6877L14990,-6684L15094,-6741L15056,-6678L15170,-6630L15303,-6616L15830,-6312L15905,-6328L15894,-6383L15950,-6367L16017,-6152L15999,-6086L15935,-6025L15833,-5995L15737,-6018L15535,-6236L15499,-6214L15486,-6248L15355,-6295L15015,-6551L14930,-6559L14848,-6498L14577,-6735L14486,-6872L14343,-6987L14280,-6969L14180,-6988L14008,-7060L13962,-7052L13957,-6985L13959,-7052L13859,-7052L13813,-7089L13714,-7059L13715,-7037L13713,-7058L13668,-7055L13667,-7028L13663,-7028L13658,-7054L13508,-7015L13484,-6980L13446,-6997L13472,-6932L13403,-6906L13466,-6933L13457,-6955L13398,-6934L13456,-6957L13443,-6997L13300,-6957L13310,-6923L13298,-6957L13150,-6903L13096,-6850L13066,-6865L13087,-6822L13051,-6857L13081,-6803L13049,-6856L13030,-6846L13052,-6796L13016,-6839L13041,-6776L13014,-6838L13026,-6775L13003,-6832L13004,-6796L12990,-6826L12968,-6804L12800,-6820L12634,-6754L12525,-6637L12467,-6496L12468,-6381L12513,-6287L12476,-6257L12513,-6100L12286,-6125L12022,-6240L11970,-6333L11954,-6459L11781,-6836L11779,-7010L11835,-7097L11846,-7237L11790,-7460L11804,-7548L11917,-7727L11885,-7750L11900,-8010L11619,-8698L11624,-8882ZM11545,-8878L11593,-8608L11768,-8144L11818,-7884L11782,-7731L11639,-7636L11630,-7557L11491,-7253L11361,-6859L11320,-6837L11286,-6737L11199,-6726L11113,-6935L10928,-7060L10866,-7150L10755,-7137L10717,-7162L10743,-7102L10679,-7061L10509,-7138L10670,-7048L10747,-7077L10862,-7056L11035,-6917L11015,-6805L11033,-6764L10959,-6575L10986,-6537L10967,-6519L11001,-6520L10966,-6504L10996,-6454L11067,-6477L11003,-6446L11096,-6370L11100,-6258L11171,-6210L11175,-6156L11077,-6073L11019,-6112L11013,-6070L11011,-6113L10978,-6117L10950,-6055L10908,-6049L10490,-6048L10436,-6069L10408,-6099L10483,-6071L10490,-6114L10352,-6141L10387,-6097L10226,-6195L10215,-6215L10246,-6198L10262,-6218L10237,-6295L10197,-6271L10214,-6216L10187,-6248L10170,-6388L10191,-6315L10232,-6310L10255,-6468L10208,-6692L10197,-6659L10109,-6618L10176,-6550L10171,-6458L10135,-6563L10064,-6621L9474,-6727L9211,-7160L8726,-7343L8709,-7260L9074,-7103L9196,-6900L9228,-6894L9230,-6800L9435,-6301L9129,-5723L9076,-5695L9078,-5571L9025,-5579L9048,-5681L8977,-5646L8882,-5660L8877,-5691L8832,-5707L8782,-5713L8776,-5672L8590,-5698L8610,-5804L8565,-5852L8428,-5858L8121,-5792L8099,-5770L8122,-5767L8119,-5758L8007,-5788L7820,-5990L7762,-6106L7708,-6083L7651,-6127L7655,-6201L7577,-6102L7642,-6209L7585,-6185L7463,-6210L7468,-6180L7439,-6176L7423,-6260L7361,-6256L7376,-6180L7398,-6185L7407,-6140L7483,-6108L7444,-6112L7404,-6138L7396,-6180L7373,-6176L7358,-6255L7199,-6243L7191,-6221L7180,-6242L7181,-6187L7160,-6314L7125,-6284L7144,-6192L7118,-6282L7112,-6250L7086,-6275L7094,-6196L7075,-6273L7064,-6241L6977,-6222L6957,-6241L6964,-6195L6946,-6240L6938,-6214L6914,-6236L6926,-6166L6901,-6233L6904,-6179L6871,-6155L6664,-6093L6559,-6101L6553,-6058L6500,-6018L6518,-6014L6364,-5903L6172,-5650L6066,-5504L6089,-5495L6099,-5484L6063,-5500L6070,-5467L6036,-5490L6046,-5436L5756,-5177L5589,-5195L5140,-5440L5040,-5509L4948,-5694L4813,-5815L4498,-5819L4417,-5851L4446,-5941L4415,-5994L4324,-6007L4003,-6531L3974,-6708L4000,-6760L4016,-7727L3936,-8882Z"},"parks":{"Central Park":"M2532,-5153L1812,-5551L-163,-1975L556,-1577Z","Bryant Park":"M-210,-414L-341,-486L-411,-359L-280,-287Z","Madison Sq Park":"M-605,840L-719,777L-826,970L-712,1033Z","City Hall Park":"M-2176,4286L-1982,4153L-2176,3997L-2387,4186Z","Brooklyn Bridge Park":"M-1307,5218L-1426,5444L-1408,5454L-1277,5221L-1299,5210ZM-1252,5157L-1237,5171L-1454,5536L-1447,5575L-1476,5592L-1591,5893L-1642,5917L-1637,5956L-1643,5969L-1602,5996L-1096,5163L-675,5107L-675,5052L-700,5044L-700,5047L-862,5004L-923,5104L-1000,5098L-1023,5031L-1157,5053ZM-1637,5846L-1591,5867L-1550,5767L-1587,5750ZM-1548,5676L-1520,5689L-1476,5592L-1498,5581Z"},"minor":"M511,2459L-2457,819M-2620,729L-2703,683M550,2388L-2506,700M589,2318L-2433,648M-2628,541L-2632,538M-2678,513L-2682,511M628,2247L-2493,523M-2493,523L-2619,454M616,2149L-2480,438M-2562,393L-2656,341M544,2017L-2465,354M-2624,267L-2647,254M524,1914L-2510,238M504,1811L-2442,183M-2460,173L-2570,113M565,1661L-2463,-12M469,1516L-2440,-91M631,1513L-2417,-171M627,1419L-2425,-267M-2517,-318L-2523,-321M624,1325L-2371,-329M620,1231L-2348,-409M634,1147L-2333,-492M657,1068L-2284,-557M659,976L-2245,-628M672,892L-2207,-698M720,735L-2112,-830M744,656L-2114,-923M794,591L-2134,-1026M833,521L-2011,-1050M885,458L-2003,-1138M930,391L-1963,-1208M973,322L-1895,-1262M1049,180L-1817,-1403M1093,113L-1778,-1473M1138,46L-1662,-1501M1182,-22L-1619,-1570M1227,-89L-1580,-1640M1271,-157L-1551,-1716M1315,-224L-1511,-1786M1360,-292L-1472,-1856M1404,-359L-1433,-1927M1449,-427L-1395,-1997M1493,-494L-1433,-2110M1545,-557L-1472,-2224M1599,-620L-1349,-2248M1647,-685L-1310,-2318M1728,-824L-1232,-2459M1825,-955L600,-1631M-141,-2040L-1159,-2603M1877,-1018L639,-1702M-102,-2111L-1120,-2673M1930,-1081L678,-1772M-63,-2181L-1081,-2744M1982,-1143L717,-1843M-24,-2252L-1027,-2806M2035,-1206L756,-1913M15,-2322L-1015,-2891M2088,-1269L795,-1984M54,-2393L-976,-2962M2140,-1332L834,-2054M93,-2463L-937,-3032M2188,-1398L872,-2125M132,-2534L-865,-3084M2234,-1465L911,-2195M171,-2604L-827,-3155M2279,-1531L950,-2265M210,-2675L-788,-3226M2325,-1598L989,-2336M249,-2745L-750,-3297M-754,-3299L-784,-3315M2370,-1665L1028,-2406M288,-2816L-738,-3382M2461,-1799L1106,-2547M365,-2956L-673,-3530M2507,-1865L1145,-2618M404,-3027L-635,-3601M2549,-1934L1184,-2688M443,-3097L-597,-3672M2590,-2003L1223,-2759M482,-3168L-559,-3743M2630,-2073L1262,-2829M521,-3238L-521,-3814M2677,-2139L1301,-2900M560,-3309L-483,-3885M2774,-2270L1379,-3041M638,-3450L-408,-4027M-455,-4053L-460,-4056M2823,-2335L1417,-3111M677,-3520L-370,-4099M2872,-2400L1456,-3182M716,-3591L-332,-4170M2920,-2465L1495,-3252M755,-3661L-295,-4241M2969,-2530L1534,-3322M794,-3732L-257,-4312M3018,-2595L1573,-3393M833,-3802L-219,-4383M3115,-2725L1651,-3534M910,-3943L-143,-4525M3153,-2796L1690,-3604M949,-4013L-105,-4596M3187,-2870L1729,-3675M988,-4084L-68,-4667M3201,-2954L1768,-3745M1027,-4154L-30,-4738M3158,-3069L1807,-3816M1066,-4225L8,-4809M3129,-3177L1846,-3886M1105,-4295L46,-4881M3144,-3261L3113,-3278M3094,-3289L1885,-3957M1144,-4366L84,-4952M3066,-3396L1924,-4027M1183,-4436L121,-5023M3050,-3497L1963,-4098M1222,-4507L159,-5094M3083,-3663L2040,-4239M1300,-4648L235,-5236M3130,-3729L2079,-4309M1339,-4718L273,-5307M3195,-3784L2118,-4380M1378,-4789L311,-5378M3270,-3835L2157,-4450M1417,-4859L348,-5449M3345,-3886L2196,-4520M1455,-4930L386,-5520M3407,-3943L2235,-4591M1494,-5000L424,-5591M3452,-4010L2274,-4661M1533,-5071L462,-5663M3498,-4077L2313,-4732M1572,-5141L500,-5734M3539,-4147L2352,-4802M1611,-5211L537,-5805M3567,-4223L2391,-4873M1650,-5282L575,-5876M3595,-4299L2430,-4943M1689,-5352L613,-5947M3622,-4376L2469,-5014M1728,-5423L651,-6018M3661,-4447L2508,-5084M1767,-5493L690,-6088","major":"M472,2529L-2475,901M484,1708L-2507,56M684,807L-2168,-769M1005,248L-1856,-1332M1687,-755L-1263,-2384M1772,-892L-1180,-2522M2416,-1732L1067,-2477M327,-2886L-700,-3453M2725,-2205L1340,-2970M599,-3379L-445,-3956M-489,-3980L-499,-3986M3066,-2660L1612,-3463M872,-3873L-181,-4454M3060,-3583L2001,-4168M1261,-4577L197,-5165M3700,-4517L731,-6158M-2850,4996L-2336,4141L-1864,3420L-1450,2754L-1029,2187L-928,1976L-894,1566L-969,1457L-819,988L-637,22L-421,-954L-180,-1970L-191,-2528L-158,-3154L9,-3705L653,-4913L1198,-5899M-2513,2365L-1450,2754L-632,3087L278,3364M-2597,2920L-1864,3420L-1332,3775M-1332,3775L-1138,3298L-936,2643L-877,2332","aves":"M-315,2094L3422,-4671M-477,2005L3260,-4761M-631,1920L3107,-4845M-507,1344L2958,-4927M-803,1549L2818,-5005M-709,1049L2678,-5082M-1401,1991L2546,-5155M-1439,1474L313,-1698M-1686,1337L66,-1834M-1931,1201L1806,-5564M-2177,1066L1561,-5699M-2416,933L1321,-5832M-2623,728L-2600,687M-2532,563L-2530,559M-2508,521L920,-5685","bridges":"M-1223,3808L-885,4719L-801,5185L-506,5718M-422,3720L843,4053L1771,4330M1518,-1221L2277,-755L3331,-56","routes":{"park":"M481,-1637L522,-1613L523,-1615L524,-1619L526,-1624L530,-1635L530,-1637L531,-1638L533,-1640L535,-1642L537,-1644L552,-1675L559,-1688L584,-1733L579,-1741L578,-1744L574,-1752L569,-1759L563,-1764L554,-1770L552,-1772L544,-1778L541,-1780L537,-1782L535,-1784L534,-1786L534,-1786L534,-1789L534,-1791L535,-1793L535,-1796L539,-1801L545,-1811L546,-1815L546,-1818L546,-1821L546,-1824L545,-1826L543,-1828L541,-1830L540,-1832L540,-1833L541,-1835L542,-1838L544,-1841L546,-1845L548,-1849L549,-1852L548,-1856L548,-1861L547,-1864L546,-1870L546,-1873L548,-1878L549,-1881L553,-1888L555,-1889L558,-1890L555,-1898L557,-1901L558,-1903L560,-1906L560,-1910L559,-1912L558,-1915L557,-1920L557,-1922L557,-1924L559,-1926L560,-1929L562,-1930L563,-1931L567,-1932L565,-1946L564,-1956L563,-1966L563,-1977L563,-2010L563,-2015L564,-2026L565,-2035L568,-2046L570,-2057L573,-2068L574,-2080L573,-2088L573,-2094L578,-2094L580,-2101L584,-2107L589,-2124L591,-2135L592,-2138L592,-2141L592,-2145L591,-2148L590,-2152L589,-2155L588,-2160L584,-2166L581,-2173L579,-2177L579,-2181L579,-2183L583,-2187L584,-2192L586,-2194L590,-2200L595,-2200L602,-2207L605,-2214L605,-2219L601,-2231L598,-2237L595,-2244L594,-2251L594,-2253L594,-2265L597,-2281L600,-2285L600,-2286L603,-2291L606,-2295L609,-2299L611,-2304L611,-2308L612,-2313L611,-2321L611,-2326L607,-2333L605,-2337L600,-2343L598,-2348L595,-2354L594,-2359L593,-2363L593,-2365L593,-2370L595,-2375L596,-2378L597,-2380L600,-2385L604,-2389L609,-2396L613,-2402L617,-2407L621,-2413L624,-2419L625,-2424L626,-2429L626,-2435L626,-2438L625,-2443L624,-2447L623,-2453L622,-2458L622,-2464L624,-2472L627,-2479L629,-2485L632,-2492L647,-2508L651,-2514L655,-2517L660,-2526L673,-2533L683,-2551L686,-2558L689,-2569L692,-2577L695,-2581L697,-2585L700,-2587L702,-2589L703,-2589L705,-2594L706,-2597L708,-2600L708,-2603L708,-2606L711,-2605L716,-2604L725,-2603L726,-2606L734,-2629L735,-2636L737,-2640L739,-2645L740,-2650L745,-2667L753,-2674L763,-2670L775,-2667L776,-2665L775,-2667L763,-2670L764,-2671L766,-2675L768,-2679L761,-2682L756,-2687L753,-2692L752,-2700L752,-2705L749,-2712L745,-2719L742,-2725L741,-2731L740,-2738L740,-2742L742,-2751L743,-2759L745,-2769L748,-2779L748,-2786L747,-2790L745,-2794L743,-2797L739,-2801L728,-2811L717,-2822L709,-2833L706,-2841L692,-2865L682,-2879L682,-2883L682,-2886L682,-2889L684,-2893L686,-2896L686,-2898L688,-2899L691,-2902L692,-2900L695,-2897L697,-2893L701,-2891L702,-2890L703,-2889L707,-2888L710,-2887L714,-2887L719,-2886L724,-2886L727,-2886L731,-2887L735,-2887L739,-2892L742,-2896L750,-2902L756,-2905L761,-2906L765,-2908L768,-2911L772,-2921L777,-2926L783,-2931L784,-2931L786,-2931L788,-2932L789,-2933L791,-2933L790,-2935L790,-2936L791,-2939L794,-2942L797,-2947L799,-2950L804,-2953L807,-2957L811,-2959L815,-2961L821,-2963L826,-2965L831,-2966L831,-2966L837,-2967L843,-2967L849,-2966L854,-2965L858,-2961L865,-2956L867,-2955L869,-2953L870,-2953L872,-2952L875,-2952L875,-2952L877,-2953L880,-2956L883,-2959L885,-2962L887,-2966L891,-2968L896,-2970L898,-2971L899,-2972L901,-2973L902,-2976L906,-2980L908,-2983L910,-2987L914,-2991L917,-2996L918,-2998L923,-3001L925,-3004L929,-3008L932,-3010L934,-3011L938,-3013L942,-3016L947,-3017L951,-3019L963,-3022L969,-3023L974,-3026L977,-3026L977,-3026L991,-3029L991,-3027L993,-3022L996,-3011L997,-3003L1004,-3006L1019,-3013L1024,-3014L1028,-3017L1032,-3017L1036,-3018L1037,-3017L1040,-3017L1041,-3019L1045,-3022L1046,-3023L1047,-3024L1051,-3027L1052,-3029L1057,-3036L1063,-3046L1065,-3051L1068,-3058L1077,-3092L1076,-3094L1075,-3097L1076,-3099L1077,-3101L1079,-3104L1081,-3103L1087,-3102L1093,-3102L1103,-3106L1110,-3108L1115,-3111L1117,-3113L1120,-3117L1125,-3121L1127,-3124L1130,-3128L1132,-3130L1134,-3122L1138,-3120L1142,-3118L1144,-3118L1153,-3113L1155,-3111L1159,-3108L1166,-3102L1172,-3099L1179,-3097L1185,-3093L1192,-3088L1196,-3082L1198,-3077L1201,-3067L1202,-3064L1203,-3062L1203,-3061L1205,-3059L1210,-3054L1217,-3051L1225,-3049L1237,-3049L1243,-3050L1247,-3051L1252,-3051L1255,-3052L1257,-3052L1258,-3051L1262,-3051L1264,-3049L1270,-3047L1276,-3042L1289,-3033L1297,-3026L1307,-3014L1317,-3007L1326,-2998L1337,-2994L1353,-2989L1355,-2991L1356,-2993L1357,-2994L1359,-2999L1362,-3003L1364,-3008L1366,-3012L1368,-3014L1369,-3016L1373,-3023L1393,-3060L1401,-3073L1404,-3081L1405,-3082L1407,-3087L1407,-3089L1416,-3103L1439,-3145L1441,-3149L1445,-3157L1474,-3208L1478,-3215L1484,-3227L1484,-3228","rock1":"M113,-964L105,-950L137,-933L145,-946L148,-945L153,-955L170,-946L178,-942L172,-932L202,-915L201,-913L190,-892L193,-890L202,-886L208,-882L211,-880L220,-897L211,-880L208,-882L202,-886L193,-890L190,-892L159,-908L135,-922L132,-923L101,-940L93,-946L89,-948L83,-950L-60,-1029L-61,-1028L-63,-1024L-66,-1019L-67,-1017L-70,-1019L-78,-1024L-110,-967L-119,-972L-121,-974L-175,-1004L-180,-997L-184,-990L-220,-1010L-221,-1008L-245,-966L-251,-954L-377,-1024L-379,-1021L-380,-1019L-383,-1015L-385,-1010L-387,-1011L-395,-1016L-399,-1018L-401,-1019L-433,-967L-439,-970L-449,-975L-456,-977L-461,-979L-462,-980L-546,-1027L-622,-1069L-653,-1086L-654,-1087L-654,-1088L-657,-1089L-665,-1094L-675,-1099L-676,-1100L-678,-1098L-681,-1094L-707,-1108L-715,-1113L-707,-1108L-681,-1094L-681,-1091L-684,-1088L-681,-1087L-672,-1080L-665,-1076L-661,-1075L-660,-1075L-532,-1004L-490,-980L-466,-966L-460,-963L-479,-900L-476,-899L-477,-896L-479,-892L-481,-886L-483,-883L-478,-880L-471,-876L-485,-853L-471,-876L-466,-884L-465,-888","ues":"M1484,-3228L1484,-3227L1488,-3224L1496,-3220L1503,-3217L1622,-3151L1636,-3178L1654,-3209L1657,-3215L1660,-3221L1693,-3280L1693,-3281L1696,-3285L1699,-3291L1699,-3292L1582,-3358L1614,-3415L1618,-3421L1623,-3429L1655,-3486L1660,-3496L1666,-3507L1697,-3566L1701,-3573L1704,-3578L1736,-3636L1740,-3642L1744,-3648L1775,-3705L1779,-3712L1783,-3718L1813,-3775L1816,-3781L1820,-3787L1852,-3845L1856,-3852L1859,-3857L1891,-3914L1892,-3916L1894,-3920L1897,-3924L1897,-3926L1929,-3983L1933,-3990L1936,-3997L1968,-4053L1972,-4059L1975,-4066L2008,-4123L2011,-4129L2015,-4135L2046,-4195L2052,-4205L2057,-4214L2090,-4274L2093,-4280L2096,-4286L2128,-4343L2131,-4349L2135,-4356L2167,-4413L2173,-4423L2209,-4489L2218,-4504L2229,-4523L2245,-4552L2248,-4558L2252,-4566L2283,-4621L2287,-4628L2290,-4634L2322,-4692L2325,-4698L2329,-4704L2345,-4733L2349,-4731L2354,-4729L2359,-4725L2360,-4725L2360,-4725L2360,-4725","soho":"M-1494,2852L-1497,2856L-1504,2850L-1505,2850L-1506,2851L-1509,2855L-1510,2857L-1511,2859L-1591,2984L-1595,2990L-1598,2994L-1678,3119L-1682,3127L-1687,3133L-1733,3205L-1746,3224L-1749,3230L-1747,3232L-1749,3230L-1746,3224L-1800,3189L-1786,3169L-1784,3164L-1743,3098L-1747,3094L-1752,3092L-1747,3084L-1742,3078L-1795,3042L-1727,2933L-1717,2917L-1714,2912L-1710,2907L-1656,2941L-1576,2818L-1574,2816L-1573,2814L-1570,2809L-1569,2808L-1569,2808L-1564,2811L-1561,2814L-1560,2815L-1488,2704L-1445,2732L-1434,2737L-1432,2738L-1423,2740L-1417,2742L-1413,2744L-1413,2741L-1408,2736L-1373,2747L-1368,2749","dumbo":"M-562,5396L-562,5388L-565,5388L-568,5387L-576,5386L-576,5382L-576,5376L-576,5374L-610,5374L-616,5373L-629,5344L-639,5319L-639,5304L-638,5285L-639,5285L-643,5284L-648,5284L-650,5283L-650,5278L-650,5273L-650,5272L-653,5272L-694,5271L-712,5269L-720,5268L-728,5268L-729,5268L-728,5238L-743,5203L-744,5202L-745,5201L-746,5198L-750,5194L-751,5193L-802,5191L-801,5185L-798,5127L-800,5127L-805,5127L-810,5127L-812,5127L-885,5122L-891,5124L-896,5124L-901,5123L-909,5117L-913,5116L-915,5116L-918,5116L-921,5115L-924,5114L-928,5114L-978,5112L-981,5112L-984,5111L-988,5110L-993,5107L-998,5103L-1003,5098L-1007,5095L-1010,5093L-1013,5090L-1015,5085L-1019,5082L-1021,5077L-1023,5074L-1024,5071L-1024,5067L-1025,5064L-1023,5064L-1023,5062L-1023,5057L-1024,5042L-1023,5057L-1023,5062L-1023,5064L-1025,5064L-1024,5067L-1024,5071L-1023,5074L-1021,5077L-1019,5082L-1015,5085L-1013,5090L-1010,5093L-1007,5095L-1003,5098L-998,5103L-993,5107L-988,5110L-984,5111L-981,5112L-978,5112L-928,5114L-924,5114L-921,5115L-918,5116L-915,5116L-913,5116L-909,5117L-901,5123L-896,5124L-891,5124L-885,5122L-812,5127L-814,5191L-815,5192L-815,5196L-815,5200L-815,5201L-819,5264L-820,5266L-820,5271L-820,5275L-819,5277L-822,5364L-824,5365L-824,5369L-825,5372L-825,5374L-826,5392L-826,5412L-828,5459L-828,5460L-828,5462L-829,5463L-829,5464L-829,5468L-829,5473L-829,5476L-825,5476L-821,5476L-821,5478L-822,5506L-823,5513L-824,5545L-825,5551L-824,5545L-823,5513L-822,5506L-821,5478L-821,5476L-825,5476L-829,5476L-829,5476L-830,5489L-831,5488L-831,5488L-832,5487L-834,5485L-835,5484L-837,5482L-838,5482L-842,5478L-842,5477L-862,5458L-887,5433L-890,5429L-895,5427L-897,5425L-915,5406L-946,5373L-962,5356L-1016,5301L-1199,5107L-1201,5101L-1202,5098L-1214,5087L-1215,5086L-1222,5084L-1228,5077L-1272,5033L-1298,5005L-1319,4983L-1329,4973L-1381,4918L-1434,4862L-1497,4798L-1536,4755L-1542,4754L-1543,4753L-1555,4741L-1556,4740L-1557,4733L-1571,4720L-1643,4644L-1677,4606L-1742,4538L-1767,4513L-1795,4485L-1808,4472L-1999,4271L-2007,4264L-2015,4255L-2021,4248L-2037,4231L-2021,4248L-2015,4255L-2007,4264L-2007,4264L-2006,4262L-2007,4261L-2010,4259L-2016,4251L-2018,4249L-2003,4242L-1999,4240L-1994,4237L-1985,4230L-1978,4225L-1968,4216L-1939,4190L-1935,4189L-1931,4188L-1929,4187L-1926,4185L-1923,4181L-1913,4174L-1907,4167L-1899,4163L-1891,4158L-1884,4155L-1881,4156L-1876,4154L-1867,4150L-1858,4147L-1849,4145L-1843,4143L-1820,4136L-1799,4130L-1795,4129L-1788,4127L-1772,4123L-1771,4123L-1770,4123L-1769,4124L-1769,4125L-1766,4123L-1758,4120L-1757,4119L-1753,4118L-1753,4118L-1751,4110L-1750,4105L-1750,4101L-1750,4099L-1750,4097L-1751,4091L-1752,4085L-1749,4084L-1736,4080L-1735,4080L-1716,4077L-1710,4076L-1633,4063L-1614,4059L-1611,4058L-1606,4056L-1595,4049L-1593,4048L-1588,4043L-1584,4038L-1582,4036L-1580,4035L-1580,4034L-1580,4034L-1580,4033L-1585,3989L-1585,3985L-1585,3982L-1591,3944L-1591,3943L-1591,3940L-1592,3938L-1592,3936L-1591,3936L-1585,3935L-1583,3935L-1580,3934L-1586,3890L-1586,3890L-1585,3888L-1585,3885L-1585,3884L-1522,3902L-1585,3884L-1585,3882L-1585,3880L-1558,3823L-1557,3821L-1555,3818L-1553,3814L-1553,3812L-1554,3812L-1557,3811L-1562,3807L-1563,3807L-1621,3779L-1569,3667L-1569,3665L-1574,3663L-1577,3662L-1577,3661L-1577,3660L-1572,3648L-1569,3640L-1568,3638L-1575,3635L-1579,3633L-1581,3631L-1618,3594L-1620,3593L-1623,3591L-1628,3587L-1628,3586L-1671,3546L-1672,3544L-1676,3541L-1682,3535L-1683,3534L-1685,3532L-1691,3525L-1693,3523L-1696,3521L-1703,3514L-1718,3501L-1720,3499L-1726,3493L-1732,3487L-1714,3462","gc":"M235,-298L231,-300L235,-306L229,-310L218,-316L213,-319L212,-320L213,-321L213,-322L215,-324L213,-325L209,-328L195,-335L187,-340L187,-340L203,-369L260,-472L258,-473L259,-474L260,-477L261,-480L265,-485L264,-486L264,-486L264,-487L259,-490L253,-493L252,-493L283,-551L284,-553L288,-557L290,-563L320,-621L261,-654L265,-660L267,-665L299,-721L304,-728L307,-735L339,-792L340,-794L342,-798L345,-803L346,-805L377,-862L380,-868L385,-874L417,-933L420,-930L417,-933L407,-937L397,-943L351,-968L282,-1006L278,-1007L271,-1011L263,-1015L261,-1017L229,-962L173,-993L141,-1010L140,-1008L137,-1004L133,-999L132,-997L127,-989L113,-964","jfk":"M-1081,-490L-1259,-588L-1297,-521L427,435L634,480L945,231L1717,856L2882,1013L3490,1311L4644,1612L5163,2019L5815,2265L6419,2650L7387,2738L7891,2452L8433,2370L9423,1942L10767,2640L11461,3189L11400,3419L11720,3593L11950,3222L12147,3145L12535,3621L12982,3836L13404,4409L15028,8405L14985,9606L15179,9701L15513,9450L15918,9544L15774,10279L16307,10813L16316,11467L16427,11554L16742,11451L17085,11706","logan":"M249889,-179467L248160,-180302L246505,-179079L245030,-180596L244770,-181676L242708,-184627L241358,-185320L240354,-186525L239856,-187911L238872,-188623L238388,-188357L237675,-189674L236688,-190120L235196,-193199L233992,-192196L232661,-191972L227986,-197921L223285,-207305L217064,-209014L214314,-213504L213298,-216915L213066,-220068L211688,-220282L212605,-221444L211875,-223770","bus":"M212714,-217839L213218,-217377L214444,-213118L217013,-209018L223351,-207212L227964,-197899L232207,-192643L232634,-191512L235221,-192812L236694,-190113L237697,-189643L238388,-188357L238872,-188623L239743,-188009L240385,-186484L242482,-184676L244728,-181697L245028,-180595L246861,-178772L246666,-177918"},"labels":[{"t":"1st Ave","x":307,"y":966,"r":-61,"k":"ave"},{"t":"2nd Ave","x":146,"y":877,"r":-61,"k":"ave"},{"t":"3rd Ave","x":-8,"y":792,"r":-61,"k":"ave"},{"t":"Lexington","x":-79,"y":569,"r":-61,"k":"ave"},{"t":"Park Ave","x":-219,"y":492,"r":-61,"k":"ave"},{"t":"Madison","x":-359,"y":414,"r":-61,"k":"ave"},{"t":"5th Ave","x":-568,"y":483,"r":-61,"k":"ave"},{"t":"6th Ave","x":-816,"y":346,"r":-61,"k":"ave"},{"t":"7th Ave","x":-1063,"y":209,"r":-61,"k":"ave"},{"t":"8th Ave","x":-1309,"y":74,"r":-61,"k":"ave"},{"t":"Central Park W","x":755,"y":-3661,"r":-61,"k":"ave"},{"t":"9th Ave","x":-1554,"y":-62,"r":-61,"k":"ave"},{"t":"Columbus","x":510,"y":-3797,"r":-61,"k":"ave"},{"t":"10th Ave","x":-1793,"y":-194,"r":-61,"k":"ave"},{"t":"Amsterdam","x":270,"y":-3929,"r":-61,"k":"ave"},{"t":"11th Ave","x":-2039,"y":-330,"r":-61,"k":"ave"},{"t":"West End","x":25,"y":-4064,"r":-61,"k":"ave"},{"t":"14 St","x":-552,"y":1963,"r":29,"k":"st"},{"t":"23 St","x":-201,"y":1329,"r":29,"k":"st"},{"t":"34 St","x":227,"y":554,"r":29,"k":"st"},{"t":"42 St","x":538,"y":-10,"r":29,"k":"st"},{"t":"57 St","x":1122,"y":-1067,"r":29,"k":"st"},{"t":"59 St","x":1200,"y":-1208,"r":29,"k":"st"},{"t":"72 St","x":1732,"y":-2109,"r":29,"k":"st"},{"t":"79 St","x":2005,"y":-2603,"r":29,"k":"st"},{"t":"86 St","x":2277,"y":-3096,"r":29,"k":"st"},{"t":"96 St","x":2667,"y":-3801,"r":29,"k":"st"},{"t":"110 St","x":3185,"y":-4802,"r":29,"k":"st"},{"t":"Broadway","x":-818,"y":1355,"r":-75,"k":"ave"},{"t":"Houston St","x":-2024,"y":2543,"r":16,"k":"st"},{"t":"Canal St","x":-2193,"y":3198,"r":16,"k":"st"},{"t":"MIDTOWN","x":-337,"y":-666,"r":0,"k":"area"},{"t":"UPPER EAST SIDE","x":2024,"y":-2665,"r":0,"k":"area"},{"t":"UPPER WEST SIDE","x":84,"y":-4441,"r":0,"k":"area"},{"t":"SOHO","x":-1855,"y":2887,"r":0,"k":"area"},{"t":"CHINATOWN","x":-1349,"y":3831,"r":0,"k":"area"},{"t":"DUMBO","x":-675,"y":5307,"r":0,"k":"area"},{"t":"BROOKLYN","x":1687,"y":6662,"r":0,"k":"area"},{"t":"QUEENS","x":8433,"y":1665,"r":0,"k":"area"},{"t":"LONG ISLAND CITY","x":3205,"y":555,"r":0,"k":"area"},{"t":"ROOSEVELT IS.","x":2530,"y":-1110,"r":0,"k":"area"},{"t":"CENTRAL PARK","x":1265,"y":-3553,"r":0,"k":"area"},{"t":"FOREST HILLS","x":11300,"y":2998,"r":0,"k":"area"},{"t":"CHELSEA","x":-1771,"y":555,"r":0,"k":"area"},{"t":"FLATIRON","x":-675,"y":1166,"r":0,"k":"area"},{"t":"THE BRONX","x":5060,"y":-7217,"r":0,"k":"area"},{"t":"Hudson River","x":-3036,"y":-666,"r":-61,"k":"water"},{"t":"East River","x":1349,"y":888,"r":-50,"k":"water"},{"t":"1st Ave","x":-62,"y":1636,"r":-61,"k":"ave"},{"t":"1st Ave","x":989,"y":-267,"r":-61,"k":"ave"},{"t":"1st Ave","x":1767,"y":-1676,"r":-61,"k":"ave"},{"t":"1st Ave","x":2741,"y":-3438,"r":-61,"k":"ave"},{"t":"2nd Ave","x":-224,"y":1546,"r":-61,"k":"ave"},{"t":"2nd Ave","x":827,"y":-356,"r":-61,"k":"ave"},{"t":"2nd Ave","x":1605,"y":-1766,"r":-61,"k":"ave"},{"t":"2nd Ave","x":2579,"y":-3527,"r":-61,"k":"ave"},{"t":"3rd Ave","x":-378,"y":1462,"r":-61,"k":"ave"},{"t":"3rd Ave","x":674,"y":-441,"r":-61,"k":"ave"},{"t":"3rd Ave","x":1452,"y":-1850,"r":-61,"k":"ave"},{"t":"3rd Ave","x":2425,"y":-3612,"r":-61,"k":"ave"},{"t":"Lexington","x":525,"y":-523,"r":-61,"k":"ave"},{"t":"Lexington","x":1303,"y":-1932,"r":-61,"k":"ave"},{"t":"Lexington","x":2277,"y":-3694,"r":-61,"k":"ave"},{"t":"Park Ave","x":-666,"y":1302,"r":-61,"k":"ave"},{"t":"Park Ave","x":385,"y":-600,"r":-61,"k":"ave"},{"t":"Park Ave","x":1163,"y":-2010,"r":-61,"k":"ave"},{"t":"Park Ave","x":2137,"y":-3772,"r":-61,"k":"ave"},{"t":"Madison","x":245,"y":-678,"r":-61,"k":"ave"},{"t":"Madison","x":1023,"y":-2087,"r":-61,"k":"ave"},{"t":"Madison","x":1996,"y":-3849,"r":-61,"k":"ave"},{"t":"5th Ave","x":-938,"y":1152,"r":-61,"k":"ave"},{"t":"5th Ave","x":113,"y":-750,"r":-61,"k":"ave"},{"t":"5th Ave","x":892,"y":-2160,"r":-61,"k":"ave"},{"t":"5th Ave","x":1865,"y":-3921,"r":-61,"k":"ave"},{"t":"6th Ave","x":-1186,"y":1015,"r":-61,"k":"ave"},{"t":"6th Ave","x":-134,"y":-887,"r":-61,"k":"ave"},{"t":"7th Ave","x":-1433,"y":879,"r":-61,"k":"ave"},{"t":"7th Ave","x":-382,"y":-1024,"r":-61,"k":"ave"},{"t":"8th Ave","x":-1678,"y":743,"r":-61,"k":"ave"},{"t":"8th Ave","x":-627,"y":-1159,"r":-61,"k":"ave"},{"t":"Central Park W","x":151,"y":-2569,"r":-61,"k":"ave"},{"t":"Central Park W","x":1125,"y":-4331,"r":-61,"k":"ave"},{"t":"9th Ave","x":-1923,"y":608,"r":-61,"k":"ave"},{"t":"9th Ave","x":-872,"y":-1295,"r":-61,"k":"ave"},{"t":"Columbus","x":-94,"y":-2704,"r":-61,"k":"ave"},{"t":"Columbus","x":879,"y":-4466,"r":-61,"k":"ave"},{"t":"10th Ave","x":-2163,"y":475,"r":-61,"k":"ave"},{"t":"10th Ave","x":-1112,"y":-1427,"r":-61,"k":"ave"},{"t":"Amsterdam","x":-334,"y":-2837,"r":-61,"k":"ave"},{"t":"Amsterdam","x":640,"y":-4599,"r":-61,"k":"ave"},{"t":"11th Ave","x":-2408,"y":340,"r":-61,"k":"ave"},{"t":"11th Ave","x":-1357,"y":-1563,"r":-61,"k":"ave"},{"t":"West End","x":-579,"y":-2972,"r":-61,"k":"ave"},{"t":"West End","x":395,"y":-4734,"r":-61,"k":"ave"},{"t":"15 St","x":-662,"y":1811,"r":29,"k":"st2"},{"t":"15 St","x":-2019,"y":1061,"r":29,"k":"st2"},{"t":"16 St","x":-623,"y":1740,"r":29,"k":"st2"},{"t":"16 St","x":-1980,"y":991,"r":29,"k":"st2"},{"t":"17 St","x":-584,"y":1670,"r":29,"k":"st2"},{"t":"17 St","x":-1941,"y":920,"r":29,"k":"st2"},{"t":"18 St","x":-545,"y":1599,"r":29,"k":"st2"},{"t":"18 St","x":-1902,"y":850,"r":29,"k":"st2"},{"t":"19 St","x":-506,"y":1529,"r":29,"k":"st2"},{"t":"19 St","x":-1863,"y":779,"r":29,"k":"st2"},{"t":"20 St","x":-467,"y":1458,"r":29,"k":"st2"},{"t":"20 St","x":-1824,"y":709,"r":29,"k":"st2"},{"t":"21 St","x":-428,"y":1388,"r":29,"k":"st2"},{"t":"21 St","x":-1785,"y":638,"r":29,"k":"st2"},{"t":"22 St","x":-389,"y":1317,"r":29,"k":"st2"},{"t":"22 St","x":-1746,"y":568,"r":29,"k":"st2"},{"t":"24 St","x":-311,"y":1177,"r":29,"k":"st2"},{"t":"24 St","x":-1668,"y":427,"r":29,"k":"st2"},{"t":"25 St","x":-272,"y":1106,"r":29,"k":"st2"},{"t":"25 St","x":-1629,"y":356,"r":29,"k":"st2"},{"t":"26 St","x":-233,"y":1036,"r":29,"k":"st2"},{"t":"26 St","x":-1590,"y":286,"r":29,"k":"st2"},{"t":"27 St","x":-195,"y":965,"r":29,"k":"st2"},{"t":"27 St","x":-1551,"y":216,"r":29,"k":"st2"},{"t":"28 St","x":-156,"y":895,"r":29,"k":"st2"},{"t":"28 St","x":-1512,"y":145,"r":29,"k":"st2"},{"t":"29 St","x":-117,"y":824,"r":29,"k":"st2"},{"t":"29 St","x":-1474,"y":75,"r":29,"k":"st2"},{"t":"30 St","x":-78,"y":754,"r":29,"k":"st2"},{"t":"30 St","x":-1435,"y":4,"r":29,"k":"st2"},{"t":"31 St","x":-39,"y":683,"r":29,"k":"st2"},{"t":"31 St","x":-1396,"y":-66,"r":29,"k":"st2"},{"t":"32 St","x":0,"y":613,"r":29,"k":"st2"},{"t":"32 St","x":-1357,"y":-137,"r":29,"k":"st2"},{"t":"33 St","x":39,"y":542,"r":29,"k":"st2"},{"t":"33 St","x":-1318,"y":-207,"r":29,"k":"st2"},{"t":"35 St","x":117,"y":401,"r":29,"k":"st2"},{"t":"35 St","x":-1240,"y":-348,"r":29,"k":"st2"},{"t":"36 St","x":156,"y":331,"r":29,"k":"st2"},{"t":"36 St","x":-1201,"y":-419,"r":29,"k":"st2"},{"t":"37 St","x":195,"y":260,"r":29,"k":"st2"},{"t":"37 St","x":-1162,"y":-489,"r":29,"k":"st2"},{"t":"38 St","x":234,"y":190,"r":29,"k":"st2"},{"t":"38 St","x":-1123,"y":-560,"r":29,"k":"st2"},{"t":"39 St","x":273,"y":119,"r":29,"k":"st2"},{"t":"39 St","x":-1084,"y":-630,"r":29,"k":"st2"},{"t":"40 St","x":312,"y":49,"r":29,"k":"st2"},{"t":"40 St","x":-1045,"y":-701,"r":29,"k":"st2"},{"t":"41 St","x":351,"y":-21,"r":29,"k":"st2"},{"t":"41 St","x":-1006,"y":-771,"r":29,"k":"st2"},{"t":"43 St","x":428,"y":-162,"r":29,"k":"st2"},{"t":"43 St","x":-928,"y":-912,"r":29,"k":"st2"},{"t":"44 St","x":467,"y":-233,"r":29,"k":"st2"},{"t":"44 St","x":-890,"y":-982,"r":29,"k":"st2"},{"t":"45 St","x":506,"y":-303,"r":29,"k":"st2"},{"t":"45 St","x":-851,"y":-1053,"r":29,"k":"st2"},{"t":"46 St","x":545,"y":-374,"r":29,"k":"st2"},{"t":"46 St","x":-812,"y":-1123,"r":29,"k":"st2"},{"t":"47 St","x":584,"y":-444,"r":29,"k":"st2"},{"t":"47 St","x":-773,"y":-1194,"r":29,"k":"st2"},{"t":"48 St","x":623,"y":-515,"r":29,"k":"st2"},{"t":"48 St","x":-734,"y":-1264,"r":29,"k":"st2"},{"t":"49 St","x":662,"y":-585,"r":29,"k":"st2"},{"t":"49 St","x":-695,"y":-1335,"r":29,"k":"st2"},{"t":"50 St","x":701,"y":-656,"r":29,"k":"st2"},{"t":"50 St","x":-656,"y":-1405,"r":29,"k":"st2"},{"t":"51 St","x":740,"y":-726,"r":29,"k":"st2"},{"t":"51 St","x":-617,"y":-1476,"r":29,"k":"st2"},{"t":"52 St","x":779,"y":-797,"r":29,"k":"st2"},{"t":"52 St","x":-578,"y":-1546,"r":29,"k":"st2"},{"t":"53 St","x":818,"y":-867,"r":29,"k":"st2"},{"t":"53 St","x":-539,"y":-1617,"r":29,"k":"st2"},{"t":"54 St","x":857,"y":-938,"r":29,"k":"st2"},{"t":"54 St","x":-500,"y":-1687,"r":29,"k":"st2"},{"t":"55 St","x":896,"y":-1008,"r":29,"k":"st2"},{"t":"55 St","x":-461,"y":-1758,"r":29,"k":"st2"},{"t":"56 St","x":934,"y":-1079,"r":29,"k":"st2"},{"t":"56 St","x":-422,"y":-1828,"r":29,"k":"st2"},{"t":"58 St","x":1012,"y":-1219,"r":29,"k":"st2"},{"t":"58 St","x":-345,"y":-1969,"r":29,"k":"st2"},{"t":"60 St","x":1090,"y":-1360,"r":29,"k":"st2"},{"t":"60 St","x":-267,"y":-2110,"r":29,"k":"st2"},{"t":"61 St","x":1129,"y":-1431,"r":29,"k":"st2"},{"t":"61 St","x":-228,"y":-2180,"r":29,"k":"st2"},{"t":"62 St","x":1168,"y":-1501,"r":29,"k":"st2"},{"t":"62 St","x":-189,"y":-2251,"r":29,"k":"st2"},{"t":"63 St","x":1207,"y":-1572,"r":29,"k":"st2"},{"t":"63 St","x":-150,"y":-2321,"r":29,"k":"st2"},{"t":"64 St","x":1246,"y":-1642,"r":29,"k":"st2"},{"t":"64 St","x":-111,"y":-2392,"r":29,"k":"st2"},{"t":"65 St","x":1285,"y":-1713,"r":29,"k":"st2"},{"t":"65 St","x":-72,"y":-2462,"r":29,"k":"st2"},{"t":"66 St","x":1324,"y":-1783,"r":29,"k":"st2"},{"t":"66 St","x":-33,"y":-2533,"r":29,"k":"st2"},{"t":"67 St","x":1363,"y":-1854,"r":29,"k":"st2"},{"t":"67 St","x":6,"y":-2603,"r":29,"k":"st2"},{"t":"68 St","x":1402,"y":-1924,"r":29,"k":"st2"},{"t":"68 St","x":45,"y":-2674,"r":29,"k":"st2"},{"t":"69 St","x":1441,"y":-1995,"r":29,"k":"st2"},{"t":"69 St","x":84,"y":-2744,"r":29,"k":"st2"},{"t":"70 St","x":1479,"y":-2065,"r":29,"k":"st2"},{"t":"70 St","x":123,"y":-2815,"r":29,"k":"st2"},{"t":"71 St","x":1518,"y":-2136,"r":29,"k":"st2"},{"t":"71 St","x":162,"y":-2885,"r":29,"k":"st2"},{"t":"73 St","x":1596,"y":-2277,"r":29,"k":"st2"},{"t":"73 St","x":239,"y":-3026,"r":29,"k":"st2"},{"t":"74 St","x":1635,"y":-2347,"r":29,"k":"st2"},{"t":"74 St","x":278,"y":-3097,"r":29,"k":"st2"},{"t":"75 St","x":1674,"y":-2417,"r":29,"k":"st2"},{"t":"75 St","x":317,"y":-3167,"r":29,"k":"st2"},{"t":"76 St","x":1713,"y":-2488,"r":29,"k":"st2"},{"t":"76 St","x":356,"y":-3237,"r":29,"k":"st2"},{"t":"77 St","x":1752,"y":-2558,"r":29,"k":"st2"},{"t":"77 St","x":395,"y":-3308,"r":29,"k":"st2"},{"t":"78 St","x":1791,"y":-2629,"r":29,"k":"st2"},{"t":"78 St","x":434,"y":-3378,"r":29,"k":"st2"},{"t":"80 St","x":1869,"y":-2770,"r":29,"k":"st2"},{"t":"80 St","x":512,"y":-3519,"r":29,"k":"st2"},{"t":"81 St","x":1908,"y":-2840,"r":29,"k":"st2"},{"t":"81 St","x":551,"y":-3590,"r":29,"k":"st2"},{"t":"82 St","x":1947,"y":-2911,"r":29,"k":"st2"},{"t":"82 St","x":590,"y":-3660,"r":29,"k":"st2"},{"t":"83 St","x":1986,"y":-2981,"r":29,"k":"st2"},{"t":"83 St","x":629,"y":-3731,"r":29,"k":"st2"},{"t":"84 St","x":2024,"y":-3052,"r":29,"k":"st2"},{"t":"84 St","x":668,"y":-3801,"r":29,"k":"st2"},{"t":"85 St","x":2063,"y":-3122,"r":29,"k":"st2"},{"t":"85 St","x":707,"y":-3872,"r":29,"k":"st2"},{"t":"87 St","x":2141,"y":-3263,"r":29,"k":"st2"},{"t":"87 St","x":784,"y":-4013,"r":29,"k":"st2"},{"t":"88 St","x":2180,"y":-3334,"r":29,"k":"st2"},{"t":"88 St","x":823,"y":-4083,"r":29,"k":"st2"},{"t":"89 St","x":2219,"y":-3404,"r":29,"k":"st2"},{"t":"89 St","x":862,"y":-4154,"r":29,"k":"st2"},{"t":"90 St","x":2258,"y":-3474,"r":29,"k":"st2"},{"t":"90 St","x":901,"y":-4224,"r":29,"k":"st2"},{"t":"91 St","x":2297,"y":-3545,"r":29,"k":"st2"},{"t":"91 St","x":940,"y":-4295,"r":29,"k":"st2"},{"t":"92 St","x":2336,"y":-3615,"r":29,"k":"st2"},{"t":"92 St","x":979,"y":-4365,"r":29,"k":"st2"},{"t":"93 St","x":2375,"y":-3686,"r":29,"k":"st2"},{"t":"93 St","x":1018,"y":-4435,"r":29,"k":"st2"},{"t":"94 St","x":2414,"y":-3756,"r":29,"k":"st2"},{"t":"94 St","x":1057,"y":-4506,"r":29,"k":"st2"},{"t":"95 St","x":2453,"y":-3827,"r":29,"k":"st2"},{"t":"95 St","x":1096,"y":-4576,"r":29,"k":"st2"},{"t":"97 St","x":2531,"y":-3968,"r":29,"k":"st2"},{"t":"97 St","x":1174,"y":-4717,"r":29,"k":"st2"},{"t":"98 St","x":2570,"y":-4038,"r":29,"k":"st2"},{"t":"98 St","x":1213,"y":-4788,"r":29,"k":"st2"},{"t":"99 St","x":2608,"y":-4109,"r":29,"k":"st2"},{"t":"99 St","x":1252,"y":-4858,"r":29,"k":"st2"},{"t":"100 St","x":2647,"y":-4179,"r":29,"k":"st2"},{"t":"100 St","x":1291,"y":-4929,"r":29,"k":"st2"},{"t":"101 St","x":2686,"y":-4250,"r":29,"k":"st2"},{"t":"101 St","x":1329,"y":-4999,"r":29,"k":"st2"},{"t":"102 St","x":2725,"y":-4320,"r":29,"k":"st2"},{"t":"102 St","x":1368,"y":-5070,"r":29,"k":"st2"},{"t":"103 St","x":2764,"y":-4391,"r":29,"k":"st2"},{"t":"103 St","x":1407,"y":-5140,"r":29,"k":"st2"},{"t":"104 St","x":2803,"y":-4461,"r":29,"k":"st2"},{"t":"104 St","x":1446,"y":-5211,"r":29,"k":"st2"},{"t":"105 St","x":2842,"y":-4532,"r":29,"k":"st2"},{"t":"105 St","x":1485,"y":-5281,"r":29,"k":"st2"},{"t":"106 St","x":2881,"y":-4602,"r":29,"k":"st2"},{"t":"106 St","x":1524,"y":-5352,"r":29,"k":"st2"},{"t":"107 St","x":2920,"y":-4672,"r":29,"k":"st2"},{"t":"107 St","x":1563,"y":-5422,"r":29,"k":"st2"},{"t":"108 St","x":2959,"y":-4743,"r":29,"k":"st2"},{"t":"108 St","x":1602,"y":-5493,"r":29,"k":"st2"},{"t":"109 St","x":2998,"y":-4813,"r":29,"k":"st2"},{"t":"109 St","x":1641,"y":-5563,"r":29,"k":"st2"}],"region":{"states":{"Connecticut":"M49,-25L49,43L44,53L37,51L1,60L-41,57L-60,73L-79,77L-103,90L-108,77L-88,65L-94,56L-89,-28Z","Maine":"M129,-148L130,-159L127,-161L147,-161L139,-140Z","Massachusetts":"M129,-119L132,-100L129,-84L116,-69L115,-52L133,-50L144,-32L142,-18L151,-14L152,-2L163,4L163,25L156,28L142,28L134,18L120,21L120,29L105,34L98,14L96,10L88,2L83,-24L49,-23L49,-25L-89,-28L-91,-32L-71,-105L90,-100L99,-110L121,-121Z","New Hampshire":"M130,-159L129,-148L139,-140L129,-119L121,-121L99,-110L90,-100L-5,-103L-12,-112L-11,-128L-4,-134L-5,-150L-3,-161L127,-161Z","New Jersey":"M-123,89L-133,121L-146,129L-153,146L-131,154L-130,161L-180,161L-180,54L-150,73Z","New York":"M-72,-115L-71,-105L-91,-32L-89,-28L-94,56L-88,65L-108,77L-103,90L-68,99L-61,93L-31,93L-15,89L10,71L11,84L24,90L-6,106L-69,130L-95,135L-112,134L-125,139L-133,121L-123,89L-150,73L-180,54L-180,-161L-70,-161Z","Rhode Island":"M105,34L88,36L98,14ZM83,-24L88,2L96,10L86,8L78,25L75,48L44,53L49,43L49,-23Z","Vermont":"M-5,-150L-4,-134L-11,-128L-12,-112L-5,-103L-71,-105L-72,-115L-70,-161L-3,-161Z"},"amtrak":"M109.8,-61.3L108.2,-60.8L102.3,-45.6L92.9,-28.2L80.6,-3.3L71.5,35.0L46.5,46.5L35.7,49.9L25.1,49.5L1.9,55.4L-43.0,55.8L-64.3,69.0L-93.3,83.6L-113.1,98.7L-122.1,111.3L-130.1,116.5","bus":"M77.0,-101.3L77.5,-100.8L78.6,-96.5L81.1,-92.4L87.3,-90.6L91.7,-81.3L95.9,-76.1L96.3,-74.9L98.8,-76.2L100.2,-73.5L101.2,-73.1L101.8,-71.8L102.3,-72.0L103.1,-71.4L103.8,-69.9L105.8,-68.1L108.0,-65.1L108.3,-64.0L110.0,-62.2L109.9,-61.3","logan":"M113.0,-62.9L111.3,-63.7L109.7,-62.5L108.3,-64.0L108.0,-65.1L106.0,-68.0L104.7,-68.7L103.7,-69.9L103.3,-71.3L102.3,-72.0L101.8,-71.8L101.1,-73.1L100.2,-73.5L98.7,-76.6L97.6,-75.6L96.3,-75.4L91.8,-81.3L87.2,-90.7L81.2,-92.4L78.5,-96.9L77.5,-100.3L77.3,-103.5L76.0,-103.7L76.9,-104.9L76.2,-107.2"},"rpts":{"aus_bos":[113.6,-62.8],"nashua":[76.2,-107.2],"pr":[77.0,-101.3],"sst":[109.8,-61.3],"penn":[-130.1,116.5],"prov":[80.6,-3.3],"nh":[-43.0,55.8],"stam":[-93.3,83.6]},"rlabels":[{"t":"NEW HAMPSHIRE","x":53.1,"y":-138.8},{"t":"MASSACHUSETTS","x":36.8,"y":-72.2},{"t":"CONNECTICUT","x":-28.6,"y":16.7},{"t":"RHODE IS.","x":69.4,"y":16.7},{"t":"NEW YORK","x":-134.8,"y":50.0},{"t":"Long Island Sound","x":-44.9,"y":79.9},{"t":"Atlantic Ocean","x":114.3,"y":61.1}]};
+</script>
+<script>
+// ---- Trip data: Dec 30, 2026 – Jan 5, 2027 (from the Notion "2026 Q4 Trip Planner", Boston-New York view) ----
+const BUDGET_DEFAULT = 3500;
+const CATS = {
+  food:     {label: 'Food',      color: 'var(--c-food)'},
+  transit:  {label: 'Transit',   color: 'var(--c-transit)'},
+  tickets:  {label: 'Tickets',   color: 'var(--c-tickets)'},
+  hotel:    {label: 'Hotel',     color: 'var(--c-hotel)'},
+  shopping: {label: 'Shopping',  color: 'var(--c-shop)'},
+  other:    {label: 'Other',     color: 'var(--c-other)'},
+};
+const LINES = { // subway bullets (MTA colors)
+  F: ['#FF6319', '#fff'], '6': ['#00933C', '#fff'], '4/5/6': ['#00933C', '#fff'], R: ['#FCCC0A', '#111'], 'N/R/W': ['#FCCC0A', '#111'],
+  '7': ['#B933AD', '#fff'], 'A/C/E': ['#0039A6', '#fff'], TRAM: ['#C8102E', '#fff'], AMTRAK: ['#1D4F91', '#fff'], BUS: ['#3F7D3A', '#fff'],
+};
+
+const HOTELS = {
+  cyts: {
+    name: 'Courtyard Times Square West', short: 'Courtyard TS West', addr: '307 W 37th St (between 8th & 9th Ave)',
+    ll: [-73.99231, 40.75412], cost: 715, costPre: 662, rating: '4.4', fee: 'No destination fee',
+    fna: 'Free Night Award on Mon Jan 4: 52K points (35K certificate + 17K top-up)',
+    walk: 'Penn Station 5 min · Minskoff 12 min · Rockefeller 20 min', subway: '34 St–Penn Station (A/C/E)',
+    pros: 'Highest-rated of the shortlist: clean and quiet, 280–320 sq ft rooms, built 2013. Easy walk from Penn Station when you arrive with bags.',
+    cons: 'The 8th Ave block feels a little gritty to some reviewers.',
+    rec: 'Best value', price: 'Sat $387 · Sun $184 · Mon free night',
+  },
+  acts: {
+    name: 'AC Hotel New York Times Square', short: 'AC Times Square', addr: '260 W 40th St (between 7th & 8th Ave)',
+    ll: [-73.98965, 40.75532], cost: 604, costPre: 604, rating: '4.3', fee: 'No destination fee',
+    fna: 'Free Night Award on Mon Jan 4: 60K points (35K + the full 25K top-up)',
+    walk: 'Minskoff 6 min · Times Sq–42 St subway 3 min · Rockefeller 16 min', subway: 'Times Sq–42 St (1/2/3, N/Q/R/W, 7, S)',
+    pros: 'Newest building (2017), clean and modern, quiet for Times Square, shortest walk to The Lion King.',
+    cons: 'Prepaid and non-refundable at this price. Rooms are small (about 225 sq ft).',
+    rec: 'Cheapest good option', price: 'Sat $368 · Sun $152 · Mon free night',
+  },
+  westin: {
+    name: 'The Westin New York Grand Central', short: 'Westin Grand Central', addr: '212 E 42nd St (near 3rd Ave)',
+    ll: [-73.97425, 40.75052], cost: 920, costPre: 786, rating: '3.9', fee: '$35/night destination fee',
+    fna: 'Free Night Award on Mon Jan 4: 56K points (35K + 21K top-up)',
+    walk: 'Grand Central 4 min · Rockefeller 16 min · Minskoff 20 min', subway: 'Grand Central–42 St (4/5/6, 7, S)',
+    pros: 'Roomier rooms, renovated 2021. Best base for the Jan 5 Grand Central, Lotte Palace and St. Patrick’s morning.',
+    cons: 'Costs about $200 more than the Courtyard and adds a destination fee. Some street noise on low floors.',
+    rec: 'More space', price: 'Sat $424 · Sun $220 · Mon free night',
+  },
+  fair: {
+    name: 'Fairfield Inn & Suites Manhattan/Fifth Ave', short: 'Fairfield Fifth Ave', addr: '21 W 37th St (near 5th Ave)',
+    ll: [-73.98394, 40.75061], cost: 442, costPre: 363, rating: '3.9', fee: 'No destination fee · free breakfast',
+    fna: 'Free Night Award on Sat Jan 2: 59K points (35K + 24K top-up)',
+    walk: 'Macy’s and Bryant Park 4 min · Minskoff 12 min · Rockefeller 14 min', subway: '34 St–Herald Sq (B/D/F/M, N/Q/R/W)',
+    pros: 'Saves roughly $300–400 against the others, and breakfast is included for both of you (about $35 a day back in the food budget).',
+    cons: 'Basic, small rooms, built 2009.',
+    rec: 'Lowest cost', price: 'Sat free night · Sun $143 · Mon $167',
+  },
+};
+
+// Region points (Boston/NH area); NYC points use [lon,lat]
+// Each stop: id, t, name, sub, ll | rp, cost (planned, for two), cat, opt, hotel, leg (how you get to the NEXT stop)
+const DAYS = [
+  { id: 'd30', date: '2026-12-30', dow: 'Wed', md: 'Dec 30', title: 'Austin → Boston → Nashua', maps: ['region'],
+    ov: [{k: 'car', r: 'logan', view: 'region'}],
+    stops: [
+      {id: 'd30-fly', t: 'Day', name: 'Fly Austin → Boston', sub: 'American, booked (Basic Economy, can’t be changed). Check your confirmation for the time.', rp: 'aus_bos', cost: 0, cat: 'transit', leg: {mode: 'car', text: 'Ride to Nashua · about 1 hr 5 min, 43 mi'}},
+      {id: 'd30-food', t: '', name: 'Travel-day food', sub: 'Airport meal and snacks.', cost: 40, cat: 'food'},
+      {id: 'd30-ride', t: '', name: 'Logan → Nashua', sub: 'Planned as a pickup by the Sicurellas. A rideshare runs about $90–120 if you need one.', cost: 0, cat: 'transit'},
+      {id: 'd30-stay', t: 'Night', name: 'Stay at the Sicurellas’', sub: 'Nashua, NH · Dec 30 – Jan 2', rp: 'nashua', cost: 0, cat: 'hotel'},
+    ]},
+  { id: 'd31', date: '2026-12-31', dow: 'Thu', md: 'Dec 31', title: 'New Year’s Eve in Nashua', maps: ['region'], ov: [],
+    stops: [
+      {id: 'd31-gift', t: 'Day', name: 'Host gift and groceries', sub: 'Something for the Sicurellas, plus your share of the New Year’s Eve food.', rp: 'nashua', cost: 100, cat: 'other'},
+      {id: 'd31-out', t: 'Night', name: 'New Year’s Eve', sub: 'With the Sicurellas.', cost: 0, cat: 'other'},
+    ]},
+  { id: 'd01', date: '2027-01-01', dow: 'Fri', md: 'Jan 1', title: 'New Year’s Day', maps: ['region'], ov: [],
+    stops: [
+      {id: 'd01-day', t: 'Day', name: 'Open day in New Hampshire', sub: 'Food or an outing with the Sicurellas.', rp: 'nashua', cost: 80, cat: 'food'},
+      {id: 'd01-pack', t: 'Night', name: 'Pack for New York', sub: 'Bus leaves 9:00 a.m. tomorrow.', cost: 0, cat: 'other'},
+    ]},
+  { id: 'd02', date: '2027-01-02', dow: 'Sat', md: 'Jan 2', title: 'Nashua → Penn Station → The Lion King', maps: ['nyc', 'region'],
+    ov: [{k: 'bus', r: 'bus', view: 'region'}, {k: 'rail', r: 'amtrak', view: 'region'},
+         {k: 'walk', ll: [[-73.9935, 40.7506], [-73.9890, 40.7508]]}, {k: 'hotel', to: [-73.9890, 40.7508]}, {k: 'hotel', to: [-73.9787, 40.7587]},
+         {k: 'walk', route: 'rock1'}, {k: 'hotel', to: [-73.9853, 40.7590]}],
+    stops: [
+      {id: 'j2-bus', t: '9:00', name: 'Boston Express bus to South Station', sub: 'From the Nashua Exit 8 Park & Ride, arrives about 10:05. $0 if the Sicurellas drive you in. Check the holiday schedule.', rp: 'pr', cost: 50, cat: 'transit', leg: {mode: 'walk', text: 'Walk inside South Station to the Amtrak gates'}},
+      {id: 'j2-train', t: '~11:00', name: 'Amtrak South Station → Penn Station', sub: 'Northeast Regional, about 3.5–4 hrs. Aim to arrive by 3 p.m. Not booked yet: book soon, holiday Saturday.', rp: 'sst', cost: 200, cat: 'transit', leg: {mode: 'rail', line: 'AMTRAK', text: 'Amtrak · Back Bay, Providence, New Haven, Stamford → Penn Station'}},
+      {id: 'j2-lunch', t: '', name: 'Lunch and snacks on the train', sub: 'Café car or bring something from South Station.', cost: 35, cat: 'food'},
+      {id: 'j2-macys', t: '3:00', name: 'Macy’s Herald Square', sub: 'Holiday windows on 34th St and the Holiday Square market (likely its last weekend). About 45 min with bags. If the train runs late, move this to Monday morning.', ll: [-73.9890, 40.7508], cost: 0, cat: 'shopping', },
+      {id: 'j2-cab', t: '', name: 'Cab or rideshare with bags', sub: 'Skip it if the hotel is a short walk from Penn Station.', cost: 20, cat: 'transit', leg: {mode: 'hotel', text: 'To the hotel with bags'}},
+      {id: 'j2-hotel', t: '3:45', name: 'Check in', sub: 'Drop bags. Hotel cost covers both paid nights; the third night is the Free Night Award.', hotel: true, cost: 0, cat: 'hotel', leg: {mode: 'hotel', text: 'Walk to Rockefeller Center (or subway)'}},
+      {id: 'j2-rock', t: '4:45', name: 'Rockefeller tree, Channel Gardens, Saks windows', sub: 'Go as it gets dark. Free.', ll: [-73.9787, 40.7587], cost: 0, cat: 'other', leg: {mode: 'walk', text: 'Walk west on 46th St · 16 min'}},
+      {id: 'j2-dinner', t: '5:45', name: 'Early dinner, Restaurant Row', sub: 'W 46th St between 8th & 9th Ave, full of pre-theater menus. Reserve if you can.', ll: [-73.9885, 40.7600], cost: 110, cat: 'food', leg: {mode: 'walk', text: 'Walk to the Minskoff · 6 min'}},
+      {id: 'j2-lk', t: '7:00', name: 'The Lion King, Minskoff Theatre', sub: '200 W 45th St. Be there by 7:00 for security; curtain 7:30. Tickets paid.', ll: [-73.9858, 40.7577], cost: 461.04, cat: 'tickets', seed: 461.04, leg: {mode: 'walk', text: 'Walk to Times Square · 1 min'}},
+      {id: 'j2-ts', t: '~10:00', name: 'Times Square lit up', sub: 'Right outside the theater. Treats on the way back.', ll: [-73.9853, 40.7590], cost: 25, cat: 'food', leg: {mode: 'hotel', text: 'Walk back to the hotel'}},
+    ]},
+  { id: 'd03', date: '2027-01-03', dow: 'Sun', md: 'Jan 3', title: 'The Plaza, Central Park, Upper East Side, skating', maps: ['nyc'],
+    ov: [{k: 'hotel', to: [-73.9744, 40.7646]}, {k: 'walk', route: 'park'}, {k: 'walk', route: 'ues'},
+         {k: 'sub', line: '6', ll: [[-73.9476, 40.7906], [-73.9568, 40.7795], [-73.9737, 40.7577], [-73.9772, 40.7527]]},
+         {k: 'walk', ll: [[-73.9519, 40.7925], [-73.9476, 40.7906]]}, {k: 'walk', ll: [[-73.9772, 40.7527], [-73.9832, 40.7536]]},
+         {k: 'hotel', to: [-73.9832, 40.7536]}, {k: 'hotel', to: [-73.9784, 40.7587]}],
+    stops: [
+      {id: 'j3-bfast', t: '8:00', name: 'Breakfast', sub: 'Grab-and-go near the hotel.', cost: 35, cat: 'food'},
+      {id: 'j3-plaza', t: '8:45', name: 'The Plaza lobby', sub: 'Fifth Ave & Central Park South. Free walk-through (Home Alone 2, Eloise). The Plaza closes in January 2027 for a multi-year restoration; check it’s still open on Jan 3.', ll: [-73.9744, 40.7646], cost: 0, cat: 'other', leg: {mode: 'walk', text: 'Cross into the park · 3 min'}},
+      {id: 'j3-gap', t: '9:15', name: 'Gapstow Bridge', sub: 'Best photo of The Plaza over the Pond, then the Wollman Rink view.', ll: [-73.9741, 40.7660], cost: 0, cat: 'other', leg: {mode: 'walk', text: 'Walk up to The Mall · 8 min'}},
+      {id: 'j3-mall', t: '10:00', name: 'The Mall, Bethesda Terrace, Bow Bridge', sub: 'Elm-lined Mall up to the fountain, then Bow Bridge over the Lake.', ll: [-73.9708, 40.7740], cost: 0, cat: 'other', leg: {mode: 'walk', text: 'Walk across to Fifth Ave · 16 min'}},
+      {id: 'j3-met', t: '11:30', name: 'The Met steps', sub: 'Blair’s lunch spot in Gossip Girl. 1000 Fifth Ave at 82nd St.', ll: [-73.9632, 40.7794], cost: 0, cat: 'other', leg: {mode: 'walk', text: 'Walk to Madison Ave · 3 min'}},
+      {id: 'j3-lunch', t: '12:00', name: 'Lunch on the Upper East Side', sub: 'Madison Ave cafés around 80th–84th St.', ll: [-73.9608, 40.7787], cost: 60, cat: 'food', leg: {mode: 'walk', text: 'Optional: walk up Fifth Ave · 25 min (or cab)'}},
+      {id: 'j3-mcny', t: '1:30', name: 'Museum of the City of New York', sub: 'Optional. The Constance Billard exterior, 1220 Fifth Ave at 103rd St. Cab budget below covers the ride up.', ll: [-73.9519, 40.7925], cost: 25, cat: 'transit', opt: true, leg: {mode: 'sub', line: '6', text: '6 train · 103 St → Grand Central–42 St, then walk west on 42nd · 8 min'}},
+      {id: 'j3-subway', t: '', name: 'Subway for the day', sub: 'OMNY: tap the same card or phone each time, $3 a ride.', cost: 20, cat: 'transit'},
+      {id: 'j3-bryant', t: '3:00', name: 'Bryant Park Holiday Shops', sub: 'Last day of the season, so go in the afternoon in case it closes early. Hot chocolate.', ll: [-73.9832, 40.7536], cost: 20, cat: 'food', leg: {mode: 'hotel', text: 'Back to the hotel to rest and warm up'}},
+      {id: 'j3-dinner', t: '7:00', name: 'Dinner', sub: 'Near the hotel or on the way to Rockefeller Center.', cost: 100, cat: 'food', leg: {mode: 'hotel', text: 'To Rockefeller Center'}},
+      {id: 'j3-rink', t: '8:30', name: 'Night skating at Rockefeller', sub: '60-min timed session under the lit tree. Book ahead: evening slots sell out first. Backup: Bryant Park’s rink (free admission, pay for rentals).', ll: [-73.9784, 40.7587], cost: 240, cat: 'tickets'},
+    ]},
+  { id: 'd04', date: '2027-01-04', dow: 'Mon', md: 'Jan 4', title: 'Flatiron, SoHo, DUMBO, Brooklyn Bridge, tram', maps: ['nyc'],
+    ov: [{k: 'hotel', to: [-73.9897, 40.7411]}, {k: 'sub', line: 'N/R/W', ll: [[-73.9893, 40.7413], [-73.9923, 40.7355], [-73.9977, 40.7243]]},
+         {k: 'walk', route: 'soho'}, {k: 'sub', line: 'F', ll: [[-73.9962, 40.7253], [-73.9900, 40.7185], [-73.9867, 40.7014]]},
+         {k: 'walk', route: 'dumbo'}, {k: 'sub', line: '4/5/6', ll: [[-74.0003, 40.7188], [-73.9906, 40.7347], [-73.9822, 40.7451], [-73.9737, 40.7577], [-73.9676, 40.7626]]},
+         {k: 'walk', ll: [[-73.9676, 40.7626], [-73.9644, 40.7612]]}, {k: 'tram', ll: [[-73.9644, 40.7612], [-73.9535, 40.7573]]},
+         {k: 'hotel', to: [-73.9676, 40.7626]}],
+    stops: [
+      {id: 'j4-bfast', t: '9:00', name: 'Breakfast', sub: '', cost: 35, cat: 'food', leg: {mode: 'hotel', text: 'Subway to 23 St (R/W) on Broadway, or walk'}},
+      {id: 'j4-flat', t: '10:00', name: 'Flatiron Building', sub: 'The Daily Bugle in the Spider-Man films. Fifth Ave & Broadway at 23rd St.', ll: [-73.9897, 40.7411], cost: 0, cat: 'other', leg: {mode: 'sub', line: 'N/R/W', text: 'R/W · 23 St → Prince St, then walk 2 blocks south · 6 min'}},
+      {id: 'j4-polene', t: '11:00', name: 'Polène SoHo', sub: '487 Broadway at Broome. Opens 11 a.m. Mon–Sat. Purchases count as shopping, outside the budget unless you choose otherwise.', ll: [-74.0007, 40.7209], cost: 0, cat: 'shopping', leg: {mode: 'walk', text: 'Walk · 5 min'}},
+      {id: 'j4-lunch', t: '12:30', name: 'Lunch in SoHo', sub: '', ll: [-74.0003, 40.7235], cost: 60, cat: 'food', leg: {mode: 'sub', line: 'F', text: 'Walk to Broadway–Lafayette St (7 min) · F train → York St (DUMBO)'}},
+      {id: 'j4-dumbo', t: '2:00', name: 'DUMBO: Washington St view', sub: 'The Manhattan Bridge framed between the buildings. Snacks around here.', ll: [-73.9895, 40.7033], cost: 25, cat: 'food', leg: {mode: 'walk', text: 'Walk to the waterfront · 4 min'}},
+      {id: 'j4-jane', t: '3:00', name: 'Jane’s Carousel', sub: 'In Brooklyn Bridge Park, skyline across the river.', ll: [-73.9915, 40.7046], cost: 0, cat: 'other', leg: {mode: 'walk', text: 'Walk to the bridge stairs on Washington St · 9 min'}},
+      {id: 'j4-bridge', t: '4:00', name: 'Walk the Brooklyn Bridge to Manhattan', sub: 'Sunset is about 4:44 p.m., skyline in front of you the whole way. About 25 min.', ll: [-73.9898, 40.7000], cost: 0, cat: 'other', leg: {mode: 'walk', text: 'Bridge ends at City Hall Park · walk to Chinatown 11 min'}},
+      {id: 'j4-dinner', t: '6:00', name: 'Dinner in Chinatown', sub: 'Right where the bridge comes down (Mott, Bayard and Pell St).', ll: [-73.9980, 40.7150], cost: 110, cat: 'food', leg: {mode: 'sub', line: '4/5/6', text: 'Walk to Canal St (8 min) · 6 train → 59 St, walk to 2nd Ave · 3 min'}},
+      {id: 'j4-tram', t: '8:00', name: 'Roosevelt Island Tram', sub: 'The Spider-Man tram. Station at 59th St & 2nd Ave, same fare as the subway. Ride over for the skyline at night and back.', ll: [-73.9644, 40.7612], cost: 0, cat: 'other', leg: {mode: 'hotel', text: 'Back from Lexington Av/59 St (N/R/W) toward Times Sq or Herald Sq'}},
+      {id: 'j4-subway', t: '', name: 'Subway and tram for the day', sub: 'Most Broadway shows are dark on Mondays.', cost: 30, cat: 'transit'},
+    ]},
+  { id: 'd05', date: '2027-01-05', dow: 'Tue', md: 'Jan 5', title: 'Grand Central, St. Patrick’s, fly home', maps: ['nyc'],
+    ov: [{k: 'hotel', to: [-73.9772, 40.7527]}, {k: 'walk', route: 'gc'}, {k: 'hotel', to: [-73.9787, 40.7587]}, {k: 'car', route: 'jfk'}],
+    stops: [
+      {id: 'j5-bfast', t: '8:15', name: 'Breakfast', sub: '', cost: 35, cat: 'food', leg: {mode: 'hotel', text: '7 train from Times Sq, or walk east on 42nd'}},
+      {id: 'j5-gc', t: '9:00', name: 'Grand Central', sub: 'Serena’s return in the Gossip Girl pilot. Main concourse and the whispering gallery.', ll: [-73.9772, 40.7527], cost: 0, cat: 'other', leg: {mode: 'walk', text: 'Walk up Madison Ave · 11 min'}},
+      {id: 'j5-palace', t: '10:00', name: 'Lotte New York Palace courtyard', sub: 'Serena’s hotel. 455 Madison Ave at 50th St.', ll: [-73.9750, 40.7584], cost: 0, cat: 'other', leg: {mode: 'walk', text: 'Across the street · 1 min'}},
+      {id: 'j5-stpat', t: '11:00', name: 'St. Patrick’s Cathedral and the tree in daylight', sub: '', ll: [-73.9760, 40.7585], cost: 0, cat: 'other', leg: {mode: 'walk', text: 'Walk to Rockefeller Plaza · 4 min'}},
+      {id: 'j5-lunch', t: '12:30', name: 'Lunch, then 2 p.m. checkout', sub: 'Ask for late checkout with Gold. Store bags at the hotel.', cost: 60, cat: 'food', leg: {mode: 'car', text: 'Rideshare with bags'}},
+      {id: 'j5-fh', t: '3:30', name: 'Forest Hills, Queens', sub: 'Optional. Peter Parker’s neighborhood: Station Square and the Tudor streets. Roughly on the way to JFK.', ll: [-73.8448, 40.7192], cost: 0, cat: 'other', opt: true, leg: {mode: 'car', text: 'On to JFK · 15–30 min'}},
+      {id: 'j5-jfk', t: '5:00', name: 'Ride to JFK', sub: 'Leave Midtown by 5 p.m.: the flight is at 8 p.m. and traffic can take 60–90 min. More if you stop in Forest Hills.', ll: [-73.7781, 40.6413], cost: 115, cat: 'transit'},
+      {id: 'j5-snack', t: '', name: 'Airport snack', sub: 'Flight JFK → Austin 8:00 p.m. (booked).', cost: 25, cat: 'food'},
+    ]},
+];
+
+const TODO = [
+  {id: 'todo-hotel', text: 'Book the hotel on marriott.com with the Boundless card (2 paid nights + Free Night Award)'},
+  {id: 'todo-amtrak', text: 'Book Amtrak Boston → New York for Sat Jan 2 (aim to arrive by 3 p.m.)'},
+  {id: 'todo-rink', text: 'Book an evening skating slot at The Rink at Rockefeller Center for Sun Jan 3'},
+  {id: 'todo-dinner', text: 'Reserve a pre-theater dinner for 5:45 p.m. Sat Jan 2'},
+  {id: 'todo-plaza', text: 'Check The Plaza is still open on Jan 3 (restoration closure starts January 2027)'},
+  {id: 'todo-bus', text: 'Check the Boston Express holiday schedule for Jan 2, or ask the Sicurellas for a ride'},
+  {id: 'todo-share', text: 'Install this app on both phones and pick who’s who'},
+];
+
+// ---- Subway lines (station to station, [lon,lat]) and landmarks for the offline map ----
+const SUBWAY = [
+  {line: '4/5/6', color: '#00933C', st: [
+    ['103 St', -73.9476, 40.7906], ['96 St', -73.9510, 40.7856], ['86 St', -73.9558, 40.7795], ['77 St', -73.9599, 40.7739],
+    ['68 St–Hunter', -73.9640, 40.7682], ['59 St', -73.9677, 40.7626], ['51 St', -73.9720, 40.7571], ['Grand Central', -73.9768, 40.7519],
+    ['33 St', -73.9821, 40.7460], ['28 St', -73.9843, 40.7434], ['23 St', -73.9866, 40.7398], ['14 St–Union Sq', -73.9897, 40.7347],
+    ['Astor Pl', -73.9911, 40.7300], ['Bleecker St', -73.9946, 40.7258], ['Spring St', -73.9974, 40.7223], ['Canal St', -74.0002, 40.7188],
+    ['Brooklyn Br–City Hall', -74.0041, 40.7131]]},
+  {line: 'N/Q/R/W', color: '#FCCC0A', st: [
+    ['Lexington Av/59 St', -73.9673, 40.7627], ['5 Av/59 St', -73.9731, 40.7643], ['57 St–7 Av', -73.9807, 40.7648], ['49 St', -73.9842, 40.7599],
+    ['Times Sq–42 St', -73.9866, 40.7547], ['34 St–Herald Sq', -73.9880, 40.7496], ['28 St', -73.9886, 40.7455], ['23 St', -73.9893, 40.7413],
+    ['14 St–Union Sq', -73.9906, 40.7359], ['8 St–NYU', -73.9925, 40.7305], ['Prince St', -73.9977, 40.7243], ['Canal St', -74.0011, 40.7195],
+    ['City Hall', -74.0068, 40.7134], ['Cortlandt St', -74.0110, 40.7104]]},
+  {line: 'Q', color: '#FCCC0A', st: [
+    ['96 St', -73.9472, 40.7841], ['86 St', -73.9516, 40.7778], ['72 St', -73.9584, 40.7688], ['Lexington Av/63 St', -73.9663, 40.7646], ['57 St–7 Av', -73.9807, 40.7648]]},
+  {line: 'B/D/F/M', color: '#FF6319', st: [
+    ['57 St', -73.9774, 40.7639], ['47–50 Sts–Rockefeller Ctr', -73.9813, 40.7587], ['42 St–Bryant Pk', -73.9843, 40.7543], ['34 St–Herald Sq', -73.9877, 40.7497],
+    ['23 St', -73.9928, 40.7429], ['14 St', -73.9962, 40.7382], ['W 4 St', -74.0004, 40.7322], ['Broadway–Lafayette', -73.9962, 40.7253],
+    ['2 Av', -73.9899, 40.7234], ['Delancey–Essex', -73.9877, 40.7184], ['East Broadway', -73.9902, 40.7139], ['York St', -73.9867, 40.7014], ['Jay St–MetroTech', -73.9871, 40.6923]]},
+  {line: '1/2/3', color: '#EE352E', st: [
+    ['96 St', -73.9724, 40.7939], ['86 St', -73.9762, 40.7889], ['79 St', -73.9799, 40.7839], ['72 St', -73.9819, 40.7784], ['66 St–Lincoln Ctr', -73.9822, 40.7735],
+    ['59 St–Columbus Circle', -73.9819, 40.7681], ['50 St', -73.9838, 40.7617], ['Times Sq–42 St', -73.9873, 40.7553], ['34 St–Penn Station', -73.9911, 40.7506],
+    ['28 St', -73.9933, 40.7474], ['23 St', -73.9957, 40.7440], ['18 St', -73.9978, 40.7410], ['14 St', -74.0003, 40.7378], ['Christopher St', -74.0029, 40.7334],
+    ['Houston St', -74.0053, 40.7283], ['Canal St', -74.0062, 40.7224], ['Franklin St', -74.0068, 40.7192], ['Chambers St', -74.0093, 40.7155]]},
+  {line: 'A/C/E', color: '#0039A6', st: [
+    ['59 St–Columbus Circle', -73.9819, 40.7681], ['50 St', -73.9860, 40.7624], ['42 St–Port Authority', -73.9898, 40.7573], ['34 St–Penn Station', -73.9932, 40.7523],
+    ['23 St', -73.9980, 40.7459], ['14 St', -74.0021, 40.7408], ['W 4 St', -74.0004, 40.7322], ['Spring St', -74.0036, 40.7262], ['Canal St', -74.0053, 40.7209],
+    ['Chambers St', -74.0089, 40.7143], ['Fulton St', -74.0079, 40.7102], ['High St', -73.9906, 40.6993]]},
+  {line: '7', color: '#B933AD', st: [
+    ['34 St–Hudson Yards', -74.0019, 40.7556], ['Times Sq–42 St', -73.9873, 40.7553], ['5 Av', -73.9811, 40.7538], ['Grand Central', -73.9761, 40.7515],
+    ['Vernon Blvd–Jackson Av', -73.9536, 40.7426], ['Hunters Point Av', -73.9488, 40.7422], ['Court Sq', -73.9459, 40.7470]]},
+  {line: 'E/M', color: '#0039A6', st: [
+    ['42 St–Port Authority', -73.9898, 40.7573], ['50 St', -73.9860, 40.7624], ['7 Av', -73.9817, 40.7626], ['5 Av/53 St', -73.9757, 40.7600], ['Lexington Av/53 St', -73.9693, 40.7577]]},
+];
+const LANDMARKS = [
+  ['Empire State Building', -73.9857, 40.7484], ['Chrysler Building', -73.9755, 40.7516], ['Grand Central', -73.9772, 40.7527], ['Penn Station', -73.9935, 40.7506],
+  ['NY Public Library', -73.9822, 40.7532], ['MoMA', -73.9776, 40.7614], ['Carnegie Hall', -73.9799, 40.7651], ['Columbus Circle', -73.9819, 40.7681],
+  ['Lincoln Center', -73.9835, 40.7725], ['Natural History Museum', -73.9740, 40.7813], ['Guggenheim', -73.9590, 40.7830], ['United Nations', -73.9680, 40.7489],
+  ['Hudson Yards', -74.0021, 40.7538], ['High Line', -74.0048, 40.7480], ['Chelsea Market', -74.0061, 40.7424], ['Union Square', -73.9906, 40.7359],
+  ['Washington Sq Park', -73.9973, 40.7308], ['One World Trade', -74.0134, 40.7127], ['9/11 Memorial', -74.0134, 40.7115], ['Wall St', -74.0090, 40.7060],
+  ['Battery Park', -74.0170, 40.7033], ['Statue of Liberty', -74.0445, 40.6892], ['Madison Square Garden', -73.9934, 40.7505], ['Bryant Park', -73.9832, 40.7536],
+  ['Little Italy', -73.9977, 40.7191], ['Lower East Side', -73.9880, 40.7150], ['East Village', -73.9840, 40.7265], ['Greenwich Village', -74.0020, 40.7340],
+];
+
+</script>
+<script>
+(function () {
+'use strict';
+const KEY = 'nycTrip27.v1', UIKEY = 'nycTrip27.ui';
+const IS_PWA = !!window.__PWA;
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const money = (n, cents) => {
+  const neg = n < 0; n = Math.abs(n);
+  const s = (cents || (Math.round(n) !== n && n < 1000)) ? n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : Math.round(n).toLocaleString('en-US');
+  return (neg ? '−$' : '$') + s;
+};
+
+// ---------- state ----------
+function blank() { return {v: 1, device: '', entries: [], visits: {}, todo: {}, settings: {hotel: 'cyts', budget: BUDGET_DEFAULT, ts: 0}, merged: []}; }
+function seed(s) {
+  DAYS.forEach(d => d.stops.forEach(st => {
+    if (st.seed && !s.entries.some(e => e.id === 'seed-' + st.id))
+      s.entries.push({id: 'seed-' + st.id, stop: st.id, day: d.id, amt: st.seed, cat: st.cat, note: 'Paid before the trip', out: false, by: 'Notion', ts: 1});
+  }));
+}
+function load() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+  if (!s || s.v !== 1) s = blank();
+  s.todo = s.todo || {}; s.merged = s.merged || []; s.settings = Object.assign({hotel: 'cyts', budget: BUDGET_DEFAULT, ts: 0}, s.settings || {});
+  seed(s); return s;
+}
+let S = load();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+let UI = {tab: 'plan', day: null, view: {}, sel: null};
+try { Object.assign(UI, JSON.parse(localStorage.getItem(UIKEY) || '{}')); } catch (e) {}
+function saveUI() { try { localStorage.setItem(UIKEY, JSON.stringify({tab: UI.tab, day: UI.day, view: UI.view})); } catch (e) {} }
+
+const STOP = {}; DAYS.forEach(d => d.stops.forEach(st => { STOP[st.id] = {st, d}; }));
+function defaultDay() {
+  const now = new Date(); const iso = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  const d = DAYS.find(x => x.date === iso); return d ? d.id : 'd02';
+}
+if (!UI.day || !DAYS.some(d => d.id === UI.day)) UI.day = defaultDay();
+
+// ---------- money math ----------
+const hotel = () => HOTELS[S.settings.hotel] || HOTELS.cyts;
+const planned = st => st.hotel ? hotel().cost : (st.cost || 0);
+const live = () => S.entries.filter(e => !e.del);
+const entriesFor = id => live().filter(e => e.stop === id).sort((a, b) => a.ts - b.ts);
+const actualFor = id => live().filter(e => e.stop === id && !e.out).reduce((a, e) => a + e.amt, 0);
+const visited = id => !!(S.visits[id] && S.visits[id].on);
+const resolved = st => visited(st.id) || actualFor(st.id) > 0;
+function totals() {
+  const T = {budget: +S.settings.budget || BUDGET_DEFAULT, plan: 0, proj: 0, spent: 0, out: 0, day: {}, cat: {}};
+  DAYS.forEach(d => T.day[d.id] = {plan: 0, actual: 0, proj: 0, done: 0, n: 0});
+  Object.keys(CATS).forEach(c => T.cat[c] = {plan: 0, actual: 0, proj: 0});
+  DAYS.forEach(d => d.stops.forEach(st => {
+    const p = planned(st); T.plan += p; T.day[d.id].plan += p; T.cat[st.cat].plan += p;
+    if (st.ll || st.rp) { T.day[d.id].n++; if (visited(st.id)) T.day[d.id].done++; }
+    if (!resolved(st)) { T.proj += p; T.day[d.id].proj += p; T.cat[st.cat].proj += p; }
+  }));
+  live().forEach(e => {
+    if (e.out) { T.out += e.amt; return; }
+    T.spent += e.amt; T.proj += e.amt;
+    const dd = T.day[e.day] || T.day[(STOP[e.stop] || {}).d?.id]; if (dd) { dd.actual += e.amt; dd.proj += e.amt; }
+    const cc = T.cat[e.cat] || T.cat.other; cc.actual += e.amt; cc.proj += e.amt;
+  });
+  T.left = T.budget - T.proj; return T;
+}
+
+// ---------- header ----------
+function renderHeader() {
+  const T = totals(); const p = $('#pill');
+  p.className = 'pill' + (T.left < 0 ? ' over' : '');
+  p.innerHTML = T.left >= 0 ? `On track <small>${money(Math.round(T.left))} under</small>` : `Over <small>by ${money(Math.round(-T.left))}</small>`;
+  $('#days').innerHTML = DAYS.map(d => {
+    const t = T.day[d.id]; const done = t.n && t.done === t.n;
+    return `<button class="dchip${done ? ' done' : ''}" type="button" data-day="${d.id}" aria-pressed="${d.id === UI.day && UI.tab === 'plan'}"><span>${d.dow}</span><b>${+d.date.slice(8)}</b><i>${t.n ? (done ? '✓ done' : t.done ? `${t.done}/${t.n}` : '') : ''}</i></button>`;
+  }).join('');
+  document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-current', b.dataset.tab === UI.tab ? 'page' : 'false'));
+}
+
+// ---------- map ----------
+const projN = (lon, lat) => [(lon + 73.98) * 84330, -(lat - 40.75) * 111030];
+const RF = 83 * Math.cos(41.8 * Math.PI / 180) / Math.cos(40.75 * Math.PI / 180);
+const projR = (lon, lat) => [(lon + 72.4) * RF, -(lat - 41.8) * 111.03];
+const pathLL = (pts, pj) => 'M' + pts.map(p => pj(p[0], p[1]).map(v => v.toFixed(1)).join(',')).join('L');
+const BASE = {};
+function baseLayer(view) {
+  if (BASE[view]) return BASE[view];
+  let s = '';
+  if (view === 'nyc') {
+    s += Object.values(MAP.land).map(d => `<path class="m-land" d="${d}"/>`).join('');
+    s += Object.values(MAP.parks).map(d => `<path class="m-park" d="${d}"/>`).join('');
+    s += `<path class="m-minor" d="${MAP.minor}"/><path class="m-ave" d="${MAP.aves}"/><path class="m-ave" d="${MAP.major}"/><path class="m-bridge" d="${MAP.bridges}"/>`;
+    s += MAP.labels.map(l => `<g class="sc lab-${l.k}" data-x="${l.x}" data-y="${l.y}" data-r="${l.r}"><text class="m-lab ${l.k}" text-anchor="middle" dominant-baseline="central">${esc(l.t)}</text></g>`).join('');
+    s += '<g class="m-subway">' + SUBWAY.map(L => `<path class="m-sline" style="stroke:${L.color}" d="${pathLL(L.st.map(x => [x[1], x[2]]), projN)}"/>`).join('') + '</g>';
+    const seen = {};
+    SUBWAY.forEach(L => L.st.forEach(([n, lon, lat]) => {
+      const k = n + Math.round(lon * 500) + Math.round(lat * 500); if (seen[k]) { seen[k].lines.push(L); return; }
+      seen[k] = {n, lon, lat, lines: [L]};
+    }));
+    s += Object.values(seen).map(o => { const [x, y] = projN(o.lon, o.lat); const lines = [...new Set(o.lines.map(L => L.line))].join(' ');
+      return `<g class="sc lab-stn" data-x="${x}" data-y="${y}" data-r="0"><circle class="m-stn" r="3.6"/><text class="m-lab stn" x="6" dominant-baseline="central">${esc(o.n)}<tspan class="stn-l"> ${esc(lines)}</tspan></text></g>`; }).join('');
+    s += LANDMARKS.map(([n, lon, lat]) => { const [x, y] = projN(lon, lat);
+      return `<g class="sc lab-lm" data-x="${x}" data-y="${y}" data-r="0"><rect class="m-lm" x="-3.2" y="-3.2" width="6.4" height="6.4" transform="rotate(45)"/><text class="m-lab lm" x="7" dominant-baseline="central">${esc(n)}</text></g>`; }).join('');
+  } else {
+    s += Object.values(MAP.region.states).map(d => `<path class="m-land" d="${d}"/>`).join('');
+    s += MAP.rlabels.map(l => `<g class="sc lab-state" data-x="${l.x}" data-y="${l.y}" data-r="0"><text class="m-lab ${/[a-z]/.test(l.t) ? 'water' : 'state'}" text-anchor="middle">${esc(l.t)}</text></g>`).join('');
+  }
+  return (BASE[view] = s);
+}
+function rpt(key) { return MAP.rpts[key]; }
+
+const M = {vb: null, view: 'nyc', day: null, svg: null, box: null, pts: [], me: null};
+function mapViewFor(d) { const v = UI.view[d.id]; return d.maps.includes(v) ? v : d.maps[0]; }
+function pinsFor(d, view) {
+  let n = 0; const out = [];
+  d.stops.forEach(st => {
+    if (!(st.ll || st.rp)) return; n++;
+    if (view === 'nyc' && st.ll) out.push({st, n, xy: projN(st.ll[0], st.ll[1])});
+    if (view === 'region' && st.rp) out.push({st, n, xy: rpt(st.rp)});
+  });
+  return out;
+}
+function pinNumber(d, id) { let n = 0, r = null; d.stops.forEach(st => { if (st.ll || st.rp) { n++; if (st.id === id) r = n; } }); return r; }
+const PL = {'d30-fly': 'Boston Logan', 'd30-stay': 'Sicurellas\u2019 (Nashua)', 'd31-gift': 'Nashua', 'd01-day': 'Nashua', 'j2-bus': 'Exit 8 Park & Ride', 'j2-train': 'South Station',
+  'j2-macys': 'Macy\u2019s', 'j2-rock': 'Rockefeller tree', 'j2-dinner': 'Restaurant Row', 'j2-lk': 'The Lion King', 'j2-ts': 'Times Square', 'j3-plaza': 'The Plaza',
+  'j3-gap': 'Gapstow Bridge', 'j3-mall': 'Bethesda & Bow Bridge', 'j3-met': 'The Met', 'j3-lunch': 'Lunch', 'j3-mcny': 'Museum of the City of NY', 'j3-bryant': 'Bryant Park',
+  'j3-rink': 'The Rink', 'j4-flat': 'Flatiron', 'j4-polene': 'Pol\u00e8ne', 'j4-lunch': 'SoHo lunch', 'j4-dumbo': 'Washington St', 'j4-jane': 'Jane\u2019s Carousel',
+  'j4-bridge': 'Brooklyn Bridge', 'j4-dinner': 'Chinatown', 'j4-tram': 'Roosevelt Island Tram', 'j5-gc': 'Grand Central', 'j5-palace': 'Lotte Palace', 'j5-stpat': 'St. Patrick\u2019s',
+  'j5-fh': 'Forest Hills', 'j5-jfk': 'JFK'};
+function shortName(st) { return PL[st.id] || st.name; }
+
+function buildMap(d) {
+  const view = mapViewFor(d); M.view = view; M.day = d;
+  const H = hotel(); const hxy = projN(H.ll[0], H.ll[1]);
+  let ov = '';
+  const ext = [];
+  d.ov.forEach(o => {
+    if ((o.view || 'nyc') !== view) return;
+    if (view === 'region') {
+      ov += `<path class="r-${o.k}" d="${MAP.region[o.r]}"/>`; return;
+    }
+    if (o.k === 'walk' && o.route) ov += `<path class="r-walk" d="${MAP.routes[o.route]}"/>`;
+    else if (o.k === 'walk') ov += `<path class="r-walk" d="${pathLL(o.ll, projN)}"/>`;
+    else if (o.k === 'sub') ov += `<path class="r-sub" style="stroke:${(LINES[o.line] || ['#888'])[0]}" d="${pathLL(o.ll, projN)}"/>`;
+    else if (o.k === 'tram') ov += `<path class="r-tram" d="${pathLL(o.ll, projN)}"/>`;
+    else if (o.k === 'car') { ov += `<path class="r-car" d="${MAP.routes[o.route]}"/>`; }
+    else if (o.k === 'hotel') { const t = projN(o.to[0], o.to[1]); ov += `<path class="r-hotel" d="M${hxy[0].toFixed(1)},${hxy[1].toFixed(1)}L${t[0].toFixed(1)},${t[1].toFixed(1)}"/>`; }
+  });
+  if (view === 'region') { d.ov.filter(o => (o.view || 'nyc') === 'region' && o.r === 'amtrak').forEach(() => ['prov', 'nh', 'stam'].forEach(k => { const p = rpt(k); ov += `<circle cx="${p[0]}" cy="${p[1]}" r="1.4" fill="#1D4F91"/>`; })); }
+  const pins = pinsFor(d, view);
+  let pz = '';
+  const showHotel = view === 'nyc' && d.ov.some(o => o.k === 'hotel');
+  if (showHotel) pz += `<g class="sc hpin" data-x="${hxy[0]}" data-y="${hxy[1]}" data-r="0"><rect x="-11" y="-11" width="22" height="22" rx="5"/><text>H</text><text class="pl" x="16" style="fill:var(--accent)">${esc(H.short)}</text></g>`;
+  pins.forEach(p => {
+    const cls = ['sc', 'pin', visited(p.st.id) ? 'done' : '', p.st.opt ? 'opt' : '', UI.sel === p.st.id ? 'sel' : ''].join(' ');
+    pz += `<g class="${cls}" data-id="${p.st.id}" data-x="${p.xy[0]}" data-y="${p.xy[1]}" data-r="0"><circle r="11"/><text>${p.n}</text><text class="pl" x="16">${esc(shortName(p.st))}</text></g>`;
+  });
+  M.pts = pins.map(p => p.xy); if (showHotel) M.pts.push(hxy);
+  if (view === 'region' && d.ov.some(o => o.r === 'amtrak')) M.pts.push(rpt('penn'), rpt('sst'));
+  const segBtns = d.maps.length > 1 ? `<div class="seg" role="group" aria-label="Map area">${d.maps.map(v => `<button type="button" data-mapview="${v}" aria-pressed="${v === view}">${v === 'nyc' ? 'New York' : 'Boston → NYC'}</button>`).join('')}</div>` : '';
+  const key = view === 'nyc'
+    ? `<span><i></i>Walk</span><span><i class="sub"></i>Subway</span><span><i class="htl"></i>To/from hotel</span><span><i class="lm"></i>Landmark</span>${d.ov.some(o => o.k === 'car') ? '<span><i class="car"></i>Car</span>' : ''}`
+    : `<span><i style="border-color:#1D4F91"></i>Amtrak</span><span><i class="car"></i>Car / bus</span>`;
+  return `<div class="mapcard">
+    <div class="maptools"><div class="mapkey">${key}</div>${segBtns}</div>
+    <div class="mapbox" id="mapbox">
+      <svg id="msvg" role="img" aria-label="Map of ${esc(d.md)} route" preserveAspectRatio="xMidYMid meet"><rect x="-1e6" y="-1e6" width="2e6" height="2e6" fill="var(--water)"/>${baseLayer(view)}<g id="mov">${ov}</g><g id="marr"></g><g id="mpins">${pz}</g><g id="mme"></g></svg>
+      <div class="mapbtns"><button type="button" data-z="in" aria-label="Zoom in">+</button><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="fit" aria-label="Fit the day">⤢</button><button type="button" data-z="me" id="mefollow" aria-pressed="${M.follow ? 'true' : 'false'}" aria-label="Follow my location">◎</button></div>
+      <div class="mapmsg" id="mapmsg" hidden></div>
+    </div></div>`;
+}
+function mapScale() { const b = M.box.getBoundingClientRect(); return Math.max(M.vb.w / b.width, M.vb.h / b.height); }
+function applyVB() {
+  if (!M.svg) return;
+  M.svg.setAttribute('viewBox', `${M.vb.x} ${M.vb.y} ${M.vb.w} ${M.vb.h}`); M.lastVB = Object.assign({}, M.vb);
+  const u = mapScale();
+  const nyc = M.view === 'nyc';
+  M.svg.querySelectorAll('.sc').forEach(g => {
+    g.setAttribute('transform', `translate(${g.dataset.x} ${g.dataset.y}) rotate(${g.dataset.r}) scale(${u})`);
+    let show = true;
+    if (nyc) {
+      const c = g.classList;
+      if (c.contains('lab-ave') || c.contains('lab-st')) show = u < 3.2;
+      else if (c.contains('lab-st2')) show = u < 1.15;
+      else if (c.contains('lab-area')) show = u < 26 && u > 1.6;
+      else if (c.contains('lab-stn')) show = u < 2.4;
+      else if (c.contains('lab-lm')) show = u < 4;
+      else if (c.contains('arr')) show = g.dataset.k === 'car' ? u < 200 : (+g.dataset.i % Math.max(1, Math.round(u / 6)) === 0);
+    }
+    g.style.display = show ? '' : 'none';
+    if (nyc && g.classList.contains('lab-stn')) { const l = g.querySelector('.stn-l'); if (l) l.style.display = u < 1.3 ? '' : 'none'; }
+    const pl = g.querySelector('.pl'); if (pl) pl.style.display = (nyc ? u < 4.5 : u < 0.45) || g.classList.contains('sel') ? '' : 'none';
+  });
+}
+function fitMap(pts, pad) {
+  const b = M.box.getBoundingClientRect(); const asp = (b.width || 360) / (b.height || 300);
+  pts = pts && pts.length ? pts : M.pts;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  pts.forEach(([x, y]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); });
+  const minW = M.view === 'nyc' ? 1100 : 60;
+  let w = Math.max(x1 - x0, minW), h = Math.max(y1 - y0, minW / asp);
+  w *= 1 + (pad ?? 0.32); h *= 1 + (pad ?? 0.32);
+  if (w / h > asp) h = w / asp; else w = h * asp;
+  M.vb = {x: (x0 + x1) / 2 - w / 2, y: (y0 + y1) / 2 - h / 2, w, h}; applyVB();
+}
+function zoomAt(cx, cy, f) {
+  const b = M.box.getBoundingClientRect();
+  const lim = M.view === 'nyc' ? [250, 70000] : [8, 900];
+  const nw = Math.min(lim[1], Math.max(lim[0], M.vb.w * f)); f = nw / M.vb.w;
+  const ux = M.vb.x + (cx - b.left) / b.width * M.vb.w, uy = M.vb.y + (cy - b.top) / b.height * M.vb.h;
+  M.vb.w *= f; M.vb.h *= f; M.vb.x = ux - (cx - b.left) / b.width * M.vb.w; M.vb.y = uy - (cy - b.top) / b.height * M.vb.h; applyVB();
+}
+function centerOn(xy, w) {
+  const asp = M.vb.w / M.vb.h; if (w) { M.vb.w = w; M.vb.h = w / asp; }
+  M.vb.x = xy[0] - M.vb.w / 2; M.vb.y = xy[1] - M.vb.h / 2; applyVB();
+}
+function wireMap() {
+  M.svg = $('#msvg'); M.box = $('#mapbox'); if (!M.svg) return;
+  drawArrows();
+  const key = M.day.id + ':' + M.view + ':' + S.settings.hotel;
+  if (M.lastKey === key && M.lastVB) { M.vb = Object.assign({}, M.lastVB); applyVB(); } else fitMap();
+  M.lastKey = key; if (M.me) drawMe();
+  const ptr = new Map(); let last = null, down = null, raf = 0;
+  const frame = () => { raf = 0; applyVB(); };
+  const queue = () => { if (!raf) raf = requestAnimationFrame(frame); };
+  M.svg.addEventListener('pointerdown', e => {
+    M.svg.setPointerCapture(e.pointerId); ptr.set(e.pointerId, {x: e.clientX, y: e.clientY});
+    if (ptr.size === 1) { const pin = e.target.closest && e.target.closest('.pin'); down = {x: e.clientX, y: e.clientY, pin: pin && pin.dataset.id, moved: false}; }
+    last = null;
+  });
+  M.svg.addEventListener('pointermove', e => {
+    if (!ptr.has(e.pointerId)) return;
+    const prev = ptr.get(e.pointerId); ptr.set(e.pointerId, {x: e.clientX, y: e.clientY});
+    const b = M.box.getBoundingClientRect(); const k = M.vb.w / b.width;
+    if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) down.moved = true;
+    if (ptr.size === 1) { M.vb.x -= (e.clientX - prev.x) * k; M.vb.y -= (e.clientY - prev.y) * k; queue(); if (M.follow && down && down.moved) setFollow(false); }
+    else if (ptr.size === 2) {
+      const [a, c] = [...ptr.values()]; const dist = Math.hypot(a.x - c.x, a.y - c.y); const mid = {x: (a.x + c.x) / 2, y: (a.y + c.y) / 2};
+      if (last) { M.vb.x -= (mid.x - last.mid.x) * k; M.vb.y -= (mid.y - last.mid.y) * k; zoomAt(mid.x, mid.y, last.dist / dist); }
+      last = {dist, mid}; if (down) down.moved = true;
+    }
+  });
+  const end = e => { ptr.delete(e.pointerId); last = null;
+    if (ptr.size === 0 && down && !down.moved && down.pin) selectStop(down.pin, 'map');
+    if (ptr.size === 0) down = null; };
+  M.svg.addEventListener('pointerup', end); M.svg.addEventListener('pointercancel', end);
+  M.svg.addEventListener('wheel', e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, Math.exp(e.deltaY * 0.0015)); }, {passive: false});
+  M.svg.addEventListener('dblclick', e => zoomAt(e.clientX, e.clientY, 0.5));
+}
+function drawArrows() {
+  const g = $('#marr'); if (!g) return;
+  const nyc = M.view === 'nyc'; let s = '';
+  $('#mov').querySelectorAll('path.r-walk,path.r-sub,path.r-car,path.r-tram,path.r-rail,path.r-bus').forEach(p => {
+    let L = 0; try { L = p.getTotalLength(); } catch (e) { return; }
+    if (!(L > 0)) return;
+    const step = nyc ? (p.classList.contains('r-car') ? 3000 : 420) : 25;
+    const car = p.classList.contains('r-car'); const n = Math.max(1, Math.floor(L / step));
+    for (let i = 0; i < n; i++) {
+      const d = (i + 0.5) * L / n; const a = p.getPointAtLength(d), b = p.getPointAtLength(Math.min(L, d + (nyc ? 6 : 0.4)));
+      const ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+      s += `<g class="sc arr" data-k="${car ? 'car' : ''}" data-i="${i}" data-x="${a.x.toFixed(1)}" data-y="${a.y.toFixed(1)}" data-r="${ang.toFixed(0)}"><path d="M-4.5,-4.5L4,0L-4.5,4.5L-2.5,0Z"/></g>`;
+    }
+  });
+  g.innerHTML = s;
+}
+function drawMe() {
+  const g = $('#mme'); if (!g || !M.me) return;
+  const nyc = M.view === 'nyc';
+  const xy = nyc ? projN(M.me.lon, M.me.lat) : projR(M.me.lon, M.me.lat);
+  const acc = nyc && M.me.acc ? `<circle class="acc" cx="${xy[0]}" cy="${xy[1]}" r="${Math.min(M.me.acc, 400)}"/>` : '';
+  const head = typeof M.me.hd === 'number' && !isNaN(M.me.hd) ? `<path class="hd" d="M0,-24L7,-11L-7,-11Z" transform="rotate(${M.me.hd})"/>` : '';
+  g.innerHTML = acc + `<g class="sc me" data-x="${xy[0]}" data-y="${xy[1]}" data-r="0">${head}<circle class="halo" r="16"/><circle class="dot" r="7"/></g>`; applyVB();
+  return xy;
+}
+function meNear(xy) { return M.view === 'nyc' ? (Math.abs(xy[0]) < 40000 && Math.abs(xy[1]) < 40000) : (xy[0] > -60 && xy[0] < 300 && xy[1] > -170 && xy[1] < 150); }
+function setFollow(on) { M.follow = on; const b = $('#mefollow'); if (b) b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+function say(t) { const msg = $('#mapmsg'); if (msg) { msg.hidden = !t; msg.textContent = t; } }
+function locate() {
+  if (M.follow) { setFollow(false); if (M.watch != null) { navigator.geolocation.clearWatch(M.watch); M.watch = null; } say('Stopped following. Tap ◎ to follow again.'); setTimeout(() => say(''), 2500); return; }
+  if (!navigator.geolocation) { say('Location isn\u2019t available in this view. Open the installed app on your phone to see where you are.'); return; }
+  setFollow(true); say('Finding you\u2026 (GPS works without signal)');
+  let first = true;
+  if (M.watch != null) navigator.geolocation.clearWatch(M.watch);
+  M.watch = navigator.geolocation.watchPosition(pos => {
+    M.me = {lon: pos.coords.longitude, lat: pos.coords.latitude, acc: pos.coords.accuracy, hd: pos.coords.heading, t: Date.now()};
+    if (!$('#msvg')) return;
+    const xy = drawMe();
+    if (!meNear(xy)) { if (first) say('You\u2019re outside this map right now. Your dot shows up once you\u2019re there.'); first = false; return; }
+    if (M.follow) centerOn(xy, first && M.view === 'nyc' ? Math.min(M.vb.w, 1600) : null);
+    if (first) say('Following you. Drag the map to stop following.');
+    if (first) setTimeout(() => say(''), 2500);
+    first = false;
+  }, err => { setFollow(false); say(err.code === 1 ? 'Location is turned off for this app. Allow it in Settings to see your dot.' : 'Couldn\u2019t get a location fix. Try again near a window or outside.'); },
+  {enableHighAccuracy: true, timeout: 20000, maximumAge: 5000});
+}
+function selectStop(id, from) {
+  UI.sel = id;
+  document.querySelectorAll('.stop.sel').forEach(n => n.classList.remove('sel'));
+  const li = document.getElementById('s-' + id); if (li) { li.classList.add('sel'); if (from === 'map') li.scrollIntoView({behavior: 'smooth', block: 'center'}); }
+  M.svg && M.svg.querySelectorAll('.pin').forEach(p => p.classList.toggle('sel', p.dataset.id === id));
+  const {st} = STOP[id] || {};
+  if (st && from !== 'map' && M.svg) {
+    const xy = M.view === 'nyc' && st.ll ? projN(st.ll[0], st.ll[1]) : M.view === 'region' && st.rp ? rpt(st.rp) : null;
+    if (xy) { centerOn(xy, M.view === 'nyc' ? Math.min(M.vb.w, 1800) : null); if (window.innerWidth < 900) $('#mapbox').scrollIntoView({behavior: 'smooth', block: 'nearest'}); }
+  }
+  applyVB();
+}
+
+// ---------- plan view ----------
+function legHTML(l) {
+  let icon = '<span class="lg-walk"></span>';
+  if (l.mode === 'sub' || l.mode === 'rail') { const c = LINES[l.line] || ['#888', '#fff']; icon = `<span class="bullet" style="background:${c[0]};color:${c[1]}">${esc(l.line === 'AMTRAK' ? 'Amtrak' : l.line)}</span>`; }
+  else if (l.mode === 'hotel') icon = '<span class="lg-hotel"></span>';
+  else if (l.mode === 'car') icon = '<span class="lg-car"></span>';
+  return `<li class="stop legli"><div></div><div class="rail"></div><div class="leg">${icon}<span>${esc(l.text)}</span></div></li>`;
+}
+function mapsLink(st) {
+  if (!st.ll) return '';
+  const ios = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
+  const href = ios ? `https://maps.apple.com/?q=${encodeURIComponent(st.name)}&ll=${st.ll[1]},${st.ll[0]}` : `https://www.google.com/maps/search/?api=1&query=${st.ll[1]},${st.ll[0]}`;
+  return `<a class="maplink" href="${href}" target="_blank" rel="noopener">Directions ↗</a>`;
+}
+function stopHTML(d, st) {
+  const n = pinNumber(d, st.id); const p = planned(st), a = actualFor(st.id); const ents = entriesFor(st.id);
+  const done = visited(st.id);
+  const H = hotel();
+  const name = st.hotel ? `Check in · ${H.name}` : st.name;
+  const sub = st.hotel ? `${H.addr}. ${st.sub}` : st.sub;
+  const node = n ? `<button type="button" class="node${st.opt ? ' opt' : ''}" data-act="focus" data-id="${st.id}" aria-label="Show on map">${done ? '✓' : n}</button>` : `<span class="node dot"></span>`;
+  const spent = a > 0 ? ` <span>Spent <b class="${a > p + 0.5 ? 'over' : 'under'}">${money(a)}</b></span>` : '';
+  const outs = ents.filter(e => e.out).reduce((x, e) => x + e.amt, 0);
+  return `<li class="stop${done ? ' done' : ''}${UI.sel === st.id ? ' sel' : ''}" id="s-${st.id}">
+    <div class="tm">${esc(st.t)}</div><div class="rail">${node}</div>
+    <div class="card">
+      <div class="ctop"><div class="ctitle">${esc(name)}${st.opt ? '<small>Optional</small>' : ''}</div>${mapsLink(st)}</div>
+      ${sub ? `<div class="csub">${esc(sub)}</div>` : ''}
+      <div class="crow"><div class="money"><span>Plan <b>${money(p)}</b></span>${spent}${outs ? ` <span>Extra <b>${money(outs)}</b></span>` : ''}</div>
+        <div class="acts"><button type="button" class="btn${done ? ' on' : ''}" data-act="visit" data-id="${st.id}" aria-pressed="${done}">${done ? '✓ Done' : 'Done'}</button><button type="button" class="btn primary" data-act="spend" data-id="${st.id}">+ Spent</button></div></div>
+      ${ents.length ? `<div class="entries">${ents.map(e => `<button type="button" class="ent" data-act="edit" data-eid="${e.id}"><span>${esc(e.note || CATS[e.cat]?.label || '')}${e.out ? ' · outside budget' : ''}${e.by && e.by !== S.device ? ' · ' + esc(e.by) : ''}</span><b>${money(e.amt)}</b></button>`).join('')}</div>` : ''}
+    </div></li>` + (st.leg ? legHTML(st.leg) : '');
+}
+function renderPlan() {
+  const d = DAYS.find(x => x.id === UI.day); const T = totals(); const t = T.day[d.id];
+  const who = S.device ? '' : `<div class="panel" style="gap:8px"><h2>Whose phone is this?</h2><div class="note">Spending you log is tagged with this name, so the two phones can be merged later.</div><div class="row2"><button class="btn primary" type="button" data-who="Jake">Jake</button><button class="btn primary" type="button" data-who="Momoka">Momoka</button></div></div>`;
+  $('#main').innerHTML = `<section class="view">${who}
+    <div class="dayhead"><span class="lbl">${d.dow} · ${d.md}</span><h1>${esc(d.title)}</h1>
+      <div class="daysum"><span>Plan <b class="num">${money(t.plan)}</b></span><span>Spent <b class="num">${money(t.actual)}</b></span>${t.n ? `<span><b>${t.done} of ${t.n}</b> places done</span>` : ''}</div></div>
+    <div class="plan">${buildMap(d)}<ol class="tl">${d.stops.map(st => stopHTML(d, st)).join('')}</ol></div>
+    <button class="btn" type="button" data-act="spend-day" style="justify-self:start">+ Other spending on ${esc(d.md)}</button>
+  </section>`;
+  wireMap();
+}
+
+// ---------- budget view ----------
+function renderBudget() {
+  const T = totals(); const B = T.budget;
+  const max = Math.max(B, T.proj) * 1.02;
+  const dayMax = Math.max(...DAYS.map(d => Math.max(T.day[d.id].plan, T.day[d.id].proj, T.day[d.id].actual)));
+  $('#main').innerHTML = `<section class="view">
+    <div class="dayhead"><span class="lbl">Whole trip · Dec 30 – Jan 5</span><h1>${T.left >= 0 ? `${money(Math.round(T.left))} under budget` : `${money(Math.round(-T.left))} over budget`}</h1>
+      <div class="daysum">Projected total = what you’ve spent + the plan for everything not done yet. Flights were paid earlier and aren’t counted.</div></div>
+    <div class="panel">
+      <div class="big">
+        <div class="stat"><span>Budget</span><b>${money(B)}</b></div>
+        <div class="stat"><span>Projected</span><b>${money(T.proj)}</b></div>
+        <div class="stat"><span>Spent so far</span><b>${money(T.spent)}</b></div>
+        <div class="stat"><span>${T.left >= 0 ? 'Room left' : 'Over'}</span><b class="${T.left >= 0 ? 'good' : 'bad'}">${money(Math.abs(T.left))}</b></div>
+      </div>
+      <div class="meter" role="img" aria-label="Spent ${money(T.spent)}, projected ${money(T.proj)} of ${money(B)}">
+        <span class="spent" style="left:0;width:${T.spent / max * 100}%"></span>
+        <span class="plan" style="left:${T.spent / max * 100}%;width:${(T.proj - T.spent) / max * 100}%"></span>
+        <span class="line" style="left:${B / max * 100}%"></span></div>
+      <div class="mkey"><span><i style="background:var(--ink)"></i>Spent</span><span><i style="background:repeating-linear-gradient(135deg,var(--muted) 0 3px,transparent 3px 7px)"></i>Still planned</span><span><i style="background:var(--bad);width:3px"></i>Budget ${money(B)}</span></div>
+      <label class="fld" style="max-width:220px">Trip budget<input id="budgetIn" class="num" type="number" inputmode="decimal" min="0" step="50" value="${B}"></label>
+    </div>
+    <div class="panel"><h2>By day</h2>
+      <div class="rows">${DAYS.map(d => { const t = T.day[d.id]; const over = t.proj > t.plan + 0.5;
+        return `<button type="button" class="brow2" data-day="${d.id}"><span class="d">${d.dow} ${+d.date.slice(8)}</span>
+          <span class="bar"><span class="p" style="left:0;width:${t.plan / dayMax * 100}%"></span><span class="a${over ? ' over' : ''}" style="left:0;width:${t.actual / dayMax * 100}%"></span></span>
+          <span class="v">${money(t.actual)}<small>of ${money(t.plan)} plan</small></span></button>`; }).join('')}</div>
+      <div class="mkey"><span><i style="background:var(--accent)"></i>Spent</span><span><i style="background:repeating-linear-gradient(135deg,var(--muted) 0 3px,transparent 3px 7px)"></i>Planned</span><span><i style="background:var(--bad)"></i>Day is running over</span></div>
+    </div>
+    <div class="panel"><h2>By category</h2>
+      ${Object.entries(CATS).map(([k, c]) => { const v = T.cat[k]; return `<div class="catrow"><i style="background:${c.color}"></i><span>${c.label}</span><span class="v m">${money(v.plan)} plan</span><span class="v">${money(v.actual)}</span></div>`; }).join('')}
+      <div class="note">Outside the budget so far (shopping you marked as extra): <b class="num">${money(T.out)}</b></div>
+    </div>
+  </section>`;
+}
+
+// ---------- log & sync ----------
+function renderLog() {
+  const T = totals();
+  const groups = DAYS.map(d => ({d, list: live().filter(e => e.day === d.id).sort((a, b) => b.ts - a.ts)})).filter(g => g.list.length);
+  const last = S.merged.slice(-3).reverse();
+  $('#main').innerHTML = `<section class="view">
+    <div class="dayhead"><span class="lbl">Everything logged</span><h1>${money(T.spent)} spent${T.out ? ` · ${money(T.out)} extra` : ''}</h1></div>
+    <div class="panel"><h2>Combine both phones</h2>
+      <div class="note">Each phone keeps its own log, even with no signal. To combine them, share this phone’s log (AirDrop, Messages or Files), then open the other phone’s app and import it. Entries are matched, so importing twice never double-counts.</div>
+      <div class="row2"><button class="btn primary" type="button" data-act="share">Share ${esc(S.device || 'this phone')}’s log</button>
+        <label class="btn" for="importFile">Import a log file</label><input id="importFile" type="file" accept=".json,application/json,text/plain" hidden>
+        <button class="btn" type="button" data-act="paste">Paste a log</button></div>
+      <div id="syncOut"></div>
+      ${last.length ? `<div class="note">${last.map(m => `Merged ${esc(m.from)}’s log ${new Date(m.at).toLocaleString('en-US', {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'})}: ${m.added} new, ${m.updated} updated`).join('<br>')}</div>` : ''}
+      <div class="note">This phone: <b>${esc(S.device || 'not set')}</b> · <button class="btn ghost" type="button" data-act="who" style="min-height:0;padding:0">change</button></div>
+    </div>
+    <div class="panel"><h2>Log</h2>
+      <button class="btn primary" type="button" data-act="spend-day" style="justify-self:start">+ Add spending</button>
+      ${groups.length ? groups.map(g => `<div class="logday"><h3>${g.d.dow} · ${g.d.md}</h3>${g.list.map(e => { const st = STOP[e.stop]?.st;
+        return `<button type="button" class="lrow" data-act="edit" data-eid="${e.id}"><span class="w">${esc(st ? (st.hotel ? 'Hotel' : st.name) : (e.note || 'Other'))}${e.out ? '<span class="tag">Extra</span>' : ''}</span><span class="a">${money(e.amt)}</span>
+          <span class="m">${esc(CATS[e.cat]?.label || '')}${e.note && st ? ' · ' + esc(e.note) : ''}${e.by ? ' · ' + esc(e.by) : ''}</span></button>`; }).join('')}</div>`).join('')
+        : '<div class="empty">Nothing logged yet. Tap “+ Spent” on any stop in the plan.</div>'}
+    </div>
+  </section>`;
+}
+function exportObj() { return {app: 'nyc27', v: 1, from: S.device || 'Phone', at: Date.now(), entries: S.entries, visits: S.visits, todo: S.todo, settings: S.settings}; }
+async function shareLog() {
+  const txt = JSON.stringify(exportObj());
+  const name = `nyc-trip-log-${(S.device || 'phone').toLowerCase()}-${new Date().toISOString().slice(5, 16).replace(/[:T]/g, '')}.json`;
+  const out = $('#syncOut');
+  try {
+    const file = new File([txt], name, {type: 'application/json'});
+    if (navigator.canShare && navigator.canShare({files: [file]})) { await navigator.share({files: [file], title: 'NYC trip log'}); toast('Shared'); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  if (IS_PWA) { try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], {type: 'application/json'})); a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast('Saved to downloads'); return; } catch (e) {} }
+  out.innerHTML = `<div class="fld">Copy this text and send it to the other phone<textarea id="exportTxt" readonly>${esc(txt)}</textarea></div><button class="btn" type="button" data-act="copy">Copy</button>`;
+}
+function mergeIn(o) {
+  if (!o || o.app !== 'nyc27' || !Array.isArray(o.entries)) throw new Error('That file isn’t a log from this trip app.');
+  let added = 0, updated = 0;
+  const mine = new Map(S.entries.map(e => [e.id, e]));
+  o.entries.forEach(e => {
+    if (!e || !e.id || typeof e.amt !== 'number') return;
+    const m = mine.get(e.id);
+    if (!m) { S.entries.push(e); mine.set(e.id, e); added++; }
+    else if ((e.ts || 0) > (m.ts || 0)) { Object.assign(m, e); updated++; }
+  });
+  [['visits', o.visits], ['todo', o.todo]].forEach(([k, src]) => Object.entries(src || {}).forEach(([id, v]) => {
+    const m = S[k][id]; if (!m || (v.ts || 0) > (m.ts || 0)) S[k][id] = v; }));
+  if (o.settings && (o.settings.ts || 0) > (S.settings.ts || 0)) S.settings = Object.assign({}, S.settings, o.settings);
+  S.merged.push({from: o.from || 'Other phone', at: Date.now(), added, updated}); S.merged = S.merged.slice(-10);
+  save(); return {added, updated};
+}
+function importText(txt) {
+  try { const r = mergeIn(JSON.parse(txt)); toast(`Merged: ${r.added} new, ${r.updated} updated`); render(); }
+  catch (e) { toast(e.message && e.message.includes('trip app') ? e.message : 'Couldn’t read that log. Share it again from the other phone.'); }
+}
+
+// ---------- info view ----------
+function renderInfo() {
+  const T = totals(); const cur = S.settings.hotel;
+  const base = T.proj - (resolved(STOP['j2-hotel'].st) ? 0 : hotel().cost);
+  $('#main').innerHTML = `<section class="view">
+    <div class="dayhead"><span class="lbl">Sat Jan 2 – Tue Jan 5 · 3 nights</span><h1>Where to stay</h1>
+      <div class="daysum">Marriott prices checked on marriott.com Oct 25 for these dates (member rates, change daily). Totals are for the 2 paid nights with NYC tax; the third night uses the Boundless Free Night Award. Tap one to use it in the plan and budget.</div></div>
+    <div class="hgrid">${Object.entries(HOTELS).map(([k, h]) => { const tot = base + h.cost; const left = T.budget - tot;
+      return `<button type="button" class="hcard" data-hotel="${k}" aria-pressed="${k === cur}">
+        <div class="ht"><span class="hn">${esc(h.name)}</span><span class="badge">${k === cur ? 'In the plan' : esc(h.rec)}</span></div>
+        <div class="hp">${money(h.cost)} <small>flexible · ${money(h.costPre)} prepaid</small></div>
+        <dl><dt>Nights</dt><dd>${esc(h.price)}</dd><dt>Points</dt><dd>${esc(h.fna)}</dd><dt>Fees</dt><dd>${esc(h.fee)}</dd><dt>Walk</dt><dd>${esc(h.walk)}</dd><dt>Subway</dt><dd>${esc(h.subway)}</dd><dt>Rating</dt><dd>${esc(h.rating)} on marriott.com</dd></dl>
+        <div class="note">${esc(h.pros)} ${esc(h.cons)}</div>
+        <div class="note">Trip total with this hotel: <b class="num">${money(Math.round(tot))}</b> · ${left >= 0 ? `${money(Math.round(left))} under` : `${money(Math.round(-left))} over`}</div>
+      </button>`; }).join('')}</div>
+    <div class="panel"><h2>Getting the most from your cards</h2>
+      <ul class="facts">
+        <li><b>Book</b><span>Directly on marriott.com, paid with the Marriott Bonvoy Boundless. Booking through Chase Travel or Amex Travel counts as a third-party booking, so the nights wouldn’t count toward status. Save the Chase $100 hotel credit for another stay.</span></li>
+        <li><b>Free night</b><span>The certificate covers up to 35K points, and you can add up to 25K of your own points. Saturday is over 60K at most of these hotels, so use it on Monday Jan 4 (Saturday at the Fairfield). Check your Bonvoy balance covers the top-up.</span></li>
+        <li><b>Gold</b><span>If Gold posts this year: 2 p.m. late checkout (ask at check-in for Jan 5), a room upgrade when available, and 25% bonus points. Gold doesn’t include breakfast or a lounge.</span></li>
+        <li><b>Rate</b><span>Flexible rates cost about 8–23% more than prepaid but can be cancelled. The budget uses the flexible price.</span></li>
+        <li><b>Taxes</b><span>NYC adds 14.75% plus $3.50 a night, and taxes destination fees too. Prices above include it.</span></li>
+      </ul></div>
+    <div class="panel"><h2>Still to book</h2><div class="todo">${TODO.map(t => { const on = !!(S.todo[t.id] && S.todo[t.id].on);
+      return `<label class="${on ? 'on' : ''}"><input type="checkbox" data-todo="${t.id}" ${on ? 'checked' : ''}><span>${esc(t.text)}</span></label>`; }).join('')}</div></div>
+    <div class="panel"><h2>Good to know</h2>
+      <ul class="facts">
+        <li><b>Flights</b><span>Wed Dec 30 Austin → Boston (American, Basic Economy). Tue Jan 5 JFK → Austin, 8:00 p.m. Both booked.</span></li>
+        <li><b>Show</b><span>The Lion King, Sat Jan 2, 7:30 p.m., Minskoff Theatre, 200 W 45th St. Paid $461.04.</span></li>
+        <li><b>Subway</b><span>Tap a card or phone at the OMNY reader, $3 a ride. Each of you needs your own card or phone. After 12 rides in 7 days on the same card, the rest are free.</span></li>
+        <li><b>Sunset</b><span>About 4:40 p.m. Plan the Brooklyn Bridge walk to start by 4.</span></li>
+        <li><b>Weather</b><span>Early January usually runs highs near 40°F and lows in the upper 20s. Gloves for the skating and the bridge.</span></li>
+        <li><b>Offline</b><span>${IS_PWA ? (navigator.serviceWorker && navigator.serviceWorker.controller ? 'This app is saved on your phone and works with no signal. Your log stays on this phone until you share it.' : 'Open the app once more with a connection to finish saving it for offline use.') : 'This online copy needs a connection. Use the version installed on your phones during the trip; it works with no signal.'}</span></li>
+      </ul></div>
+  </section>`;
+}
+
+// ---------- sheet (add / edit spending) ----------
+function openSpend({stopId, dayId, entry}) {
+  const st = stopId ? STOP[stopId].st : (entry && entry.stop ? STOP[entry.stop].st : null);
+  const day = entry ? entry.day : stopId ? STOP[stopId].d.id : dayId || UI.day;
+  const e = entry || {amt: '', cat: st ? st.cat : 'food', note: '', out: st ? st.cat === 'shopping' : false};
+  let cat = e.cat, out = !!e.out, armed = false;
+  const dOpts = DAYS.map(d => `<option value="${d.id}" ${d.id === day ? 'selected' : ''}>${d.dow} ${d.md}</option>`).join('');
+  const title = st ? (st.hotel ? 'Hotel' : st.name) : 'Other spending';
+  $('#sheet').innerHTML = `<div class="scrim" id="scrim"><form class="sheet" id="sform" autocomplete="off">
+    <h2>${entry ? 'Edit spending' : 'Add spending'}</h2><div class="sub">${esc(title)}${st ? ` · plan ${money(planned(st))}` : ''}</div>
+    <label class="amt"><span>$</span><input id="sAmt" type="text" inputmode="decimal" placeholder="0.00" value="${e.amt === '' ? '' : e.amt}" aria-label="Amount"></label>
+    <div class="chips" role="group" aria-label="Category">${Object.entries(CATS).map(([k, c]) => `<button type="button" class="chipb" data-cat="${k}" aria-pressed="${k === cat}">${c.label}</button>`).join('')}</div>
+    <label class="fld">Note<input id="sNote" type="text" value="${esc(e.note)}" placeholder="e.g. dinner at Joe Allen"></label>
+    ${st ? '' : `<label class="fld">Day<select id="sDay">${dOpts}</select></label>`}
+    <label class="chk"><input id="sOut" type="checkbox" ${out ? 'checked' : ''}> Extra, outside the trip budget (shopping, souvenirs)</label>
+    <div class="sacts">${entry ? '<button type="button" class="btn danger" id="sDel">Delete</button>' : '<span></span>'}<div class="row2"><button type="button" class="btn" id="sCancel">Cancel</button><button type="submit" class="btn primary">Save</button></div></div>
+  </form></div>`;
+  const amt = $('#sAmt'); setTimeout(() => amt.focus(), 60);
+  const close = () => { $('#sheet').innerHTML = ''; };
+  $('#scrim').addEventListener('click', ev => { if (ev.target.id === 'scrim') close(); });
+  $('#sCancel').onclick = close;
+  $('#sform').querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { cat = b.dataset.cat; $('#sform').querySelectorAll('[data-cat]').forEach(x => x.setAttribute('aria-pressed', x === b)); if (cat === 'shopping' && !entry) $('#sOut').checked = true; });
+  if (entry) $('#sDel').onclick = ev => {
+    if (!armed) { armed = true; ev.target.textContent = 'Tap again to delete'; return; }
+    const m = S.entries.find(x => x.id === entry.id); m.del = true; m.ts = Date.now(); save(); close(); render(); toast('Deleted');
+  };
+  $('#sform').onsubmit = ev => {
+    ev.preventDefault();
+    const v = parseFloat(String(amt.value).replace(/[$,\s]/g, ''));
+    if (!(v > 0)) { amt.focus(); amt.style.color = 'var(--bad)'; return; }
+    const rec = {amt: Math.round(v * 100) / 100, cat, note: $('#sNote').value.trim(), out: $('#sOut').checked, ts: Date.now()};
+    if (entry) Object.assign(S.entries.find(x => x.id === entry.id), rec);
+    else S.entries.push(Object.assign({id: uid(), stop: stopId || null, day: st ? STOP[stopId].d.id : $('#sDay').value, by: S.device || ''}, rec));
+    save(); close(); render(); toast(`Saved ${money(rec.amt)}`);
+  };
+}
+function openWho() {
+  $('#sheet').innerHTML = `<div class="scrim" id="scrim"><div class="sheet"><h2>Whose phone is this?</h2><div class="sub">Used to label what you log.</div>
+    <div class="row2"><button class="btn primary" type="button" data-who="Jake">Jake</button><button class="btn primary" type="button" data-who="Momoka">Momoka</button></div></div></div>`;
+  $('#scrim').addEventListener('click', ev => { if (ev.target.id === 'scrim') $('#sheet').innerHTML = ''; });
+}
+function openPaste() {
+  $('#sheet').innerHTML = `<div class="scrim" id="scrim"><form class="sheet" id="pform"><h2>Paste a log</h2><div class="sub">Paste the text shared from the other phone.</div>
+    <textarea id="pTxt" placeholder='{"app":"nyc27",…}'></textarea><div class="sacts"><span></span><div class="row2"><button type="button" class="btn" id="pCancel">Cancel</button><button class="btn primary" type="submit">Merge</button></div></div></form></div>`;
+  $('#pCancel').onclick = () => $('#sheet').innerHTML = '';
+  $('#pform').onsubmit = ev => { ev.preventDefault(); const t = $('#pTxt').value; $('#sheet').innerHTML = ''; importText(t); };
+}
+let toastT = 0;
+function toast(t) { let n = $('#toast'); if (!n) { n = document.createElement('div'); n.id = 'toast'; n.className = 'toast'; n.setAttribute('role', 'status'); document.body.appendChild(n); } n.textContent = t; n.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => n.hidden = true, 2200); }
+
+// ---------- render & events ----------
+function render() {
+  renderHeader();
+  if (UI.tab === 'plan') renderPlan(); else if (UI.tab === 'budget') renderBudget(); else if (UI.tab === 'log') renderLog(); else renderInfo();
+  saveUI();
+}
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('button,[data-act],a'); if (!t) return;
+  if (t.dataset.day) { UI.day = t.dataset.day; UI.tab = 'plan'; UI.sel = null; render(); window.scrollTo({top: 0}); return; }
+  if (t.dataset.tab) { UI.tab = t.dataset.tab; render(); window.scrollTo({top: 0}); return; }
+  if (t.id === 'pill') { UI.tab = 'budget'; render(); window.scrollTo({top: 0}); return; }
+  if (t.dataset.who) { S.device = t.dataset.who; save(); $('#sheet').innerHTML = ''; render(); toast(`This phone is ${S.device}’s`); return; }
+  if (t.dataset.mapview) { UI.view[UI.day] = t.dataset.mapview; render(); return; }
+  if (t.dataset.hotel) { S.settings.hotel = t.dataset.hotel; S.settings.ts = Date.now(); save(); render(); toast(`${HOTELS[t.dataset.hotel].short} is in the plan`); return; }
+  if (t.dataset.z) {
+    const b = M.box.getBoundingClientRect(); const cx = b.left + b.width / 2, cy = b.top + b.height / 2;
+    if (t.dataset.z === 'in') zoomAt(cx, cy, 0.6); else if (t.dataset.z === 'out') zoomAt(cx, cy, 1 / 0.6); else if (t.dataset.z === 'fit') fitMap(); else locate();
+    return;
+  }
+  const act = t.dataset.act; if (!act) return;
+  if (act === 'focus') selectStop(t.dataset.id, 'list');
+  else if (act === 'visit') { const id = t.dataset.id; const on = !visited(id); S.visits[id] = {on, ts: Date.now(), by: S.device}; save(); UI.sel = id; render(); if (on) toast('Marked done'); }
+  else if (act === 'spend') openSpend({stopId: t.dataset.id});
+  else if (act === 'spend-day') openSpend({dayId: UI.day});
+  else if (act === 'edit') { const e = S.entries.find(x => x.id === t.dataset.eid); if (e) openSpend({entry: e}); }
+  else if (act === 'share') shareLog();
+  else if (act === 'paste') openPaste();
+  else if (act === 'who') openWho();
+  else if (act === 'copy') { const ta = $('#exportTxt'); try { navigator.clipboard.writeText(ta.value).then(() => toast('Copied'), () => { ta.select(); toast('Select all and copy'); }); } catch (e) { ta.select(); } }
+});
+document.addEventListener('change', ev => {
+  const t = ev.target;
+  if (t.id === 'importFile' && t.files && t.files[0]) { const r = new FileReader(); r.onload = () => importText(String(r.result)); r.readAsText(t.files[0]); t.value = ''; }
+  else if (t.dataset.todo) { S.todo[t.dataset.todo] = {on: t.checked, ts: Date.now()}; save(); t.closest('label').classList.toggle('on', t.checked); }
+  else if (t.id === 'budgetIn') { const v = parseFloat(t.value); if (v > 0) { S.settings.budget = v; S.settings.ts = Date.now(); save(); render(); } }
+});
+let rz = 0; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (M.svg && document.body.contains(M.svg)) applyVB(); }, 120); });
+window.addEventListener('storage', ev => { if (ev.key === KEY) { S = load(); render(); } });
+render();
+
+if (IS_PWA && 'serviceWorker' in navigator) {
+  try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
+}
+})();
+
+</script>
+</body></html>
